@@ -4,6 +4,7 @@ gene differential expression (DE) in scRNA-seq data. It identifies cell-type spe
 
 Except from our proposed method, `popuDE` also provides a common interface for classic DE methods such as the Wilcoxon test, t-test and [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html).
 
+
 ## Installation
 You can install `popuDE` from [GitHub](https://github.com/luxiao10/cts_gene) using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package:
 ```R
@@ -38,8 +39,7 @@ posterior probabilities of genes and parameter estimations for a particular cell
 ```R
 res$celltype1$pp.d1
 ```
-For more details about how to run `popuDE` and class DE methods, please refer to 
-the vignette.
+For more details about how to run `popuDE` and class DE methods, please refer to `vignette("popuDE")`.
 
 
 ## Reproducibility
@@ -51,10 +51,6 @@ If you want to reproduce results shown in the paper, please refer to the directo
 - Memory: 256GB
 - System: Ubuntu 20.04.6 LTS
 - R version: 4.3.0
-
-## TODO list
-- Check README
-- Add a vignette
 
 ## Citation
 Coming soon.
