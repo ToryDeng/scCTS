@@ -40,5 +40,8 @@ Imports:
     methods
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    BiocStyle
 VignetteBuilder: knitr
+
+
