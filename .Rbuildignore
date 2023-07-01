@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+
+^Rlog\.txt$
+^run\.sh$
+^reproducibility$
+^doc$
+^Meta$

@@ -1,0 +1,44 @@
+Package: popuDE
+Type: Package
+Title: Population-level Differetial Expression Analysis for single-cell RNA-seq
+Version: 0.1.0
+Authors@R: c(
+    person("Luxiao", "Chen", 
+           email = "luxiao.chen@emory.edu", 
+           role = c("aut")),
+    person("Tao", "Deng", 
+           email = "taodeng@link.cuhk.edu.cn", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-7401-311X"))
+    )
+Description: popuDE is an R package for the statistical modeling of the 
+    gene differential expression. It identifies cell-type specific genes (markers)
+    that consistently appear in historical population-level scRNA-seq (scRNA-seq) data.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: bzip2
+RoxygenNote: 7.2.3
+Depends: 
+    R (>= 4.1.0)
+Imports:
+    doParallel,
+    BiocParallel,
+    parallel,
+    DelayedArray,
+    SummarizedExperiment,
+    SingleCellExperiment,
+    matrixTests,
+    DESeq2,
+    Matrix,
+    data.table,
+    cli,
+    stringr,
+    abind,
+    foreach,
+    iterators,
+    methods
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

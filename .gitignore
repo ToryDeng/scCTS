@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+Rlog.txt
+run.sh
+reproducibility/*/*.rds
+reproducibility/*/*.Rmd
+reproducibility/*/*.nb.html
+inst/doc
+/doc/
+/Meta/
