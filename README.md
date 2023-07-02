@@ -11,7 +11,7 @@ You can install `popuDE` from [GitHub](https://github.com/luxiao10/cts_gene) usi
 if (!require("devtools", quietly = TRUE))
     install.packages("devtools")
     
-devtools::install_github('luxiao10/cts_gene')
+devtools::install_github('luxiao10/cts_gene', dependencies=T)
 library(popuDE)
 ```
 

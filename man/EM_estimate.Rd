@@ -15,10 +15,10 @@ EM_estimate(
 )
 }
 \arguments{
-\item{dat.info.sum}{Output of function \code{data.info.reorganize}
+\item{dat.info.sum}{Output of function \code{data.info.reorganize()}
 contains summarized statistics of each sample}
 
-\item{effect_thres}{Threshold for filtering genes with negative mean (m_gk in Eq 3 in manuscirpt),}
+\item{effect_thres}{Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscirpt),}
 
 \item{maxiter}{Maximum iteration number}
 

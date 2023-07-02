@@ -23,23 +23,23 @@ popuDE(
 )
 }
 \arguments{
-\item{sce}{A `SingleCellExperiment` object. Should contain normalized count matrix,
+\item{sce}{A \code{SingleCellExperiment} object. Should contain normalized count matrix,
 subject and cell type info.}
 
-\item{use.raw}{Whether to use the raw counts. If `TRUE`, the raw counts are then normalized by `popuDE`.}
+\item{use.raw}{Whether to use the raw counts. If \code{TRUE}, the raw counts are then normalized by \pkg{popuDE}.}
 
 \item{use.norm.rep}{Which count matrix should be used. Default is the matrix
-accessed by \code{normcounts}.}
+accessed by \code{normcounts()}.}
 
-\item{subject.rep}{The name of column that stores subject labels of cells in `colData`.}
+\item{subject.rep}{The name of column that stores subject labels of cells in \code{colData} slot.}
 
-\item{celltype.rep}{The name of column that stores cell type labels in `colData`.}
+\item{celltype.rep}{The name of column that stores cell type labels in \code{colData} slot.}
 
 \item{log.input}{Whether the input expression matrix is log-transformed.}
 
 \item{log.base}{The base of log-transformation.}
 
-\item{effect_thres}{Threshold for filtering genes with negative mean (m_gk in Eq 3 in manuscript),}
+\item{effect_thres}{Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript),}
 
 \item{maxiter}{Maximum iteration number}
 

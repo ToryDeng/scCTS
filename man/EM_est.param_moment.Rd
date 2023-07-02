@@ -31,11 +31,11 @@ EM_est.param_moment(
 
 \item{pi_init}{Estimated initial value of \eqn{\pi}}
 
-\item{delta.init}{Estimated value from \code{EM_var1_g.indep}, fixed in this round}
+\item{delta.init}{Estimated value from \code{EM_var1_g.indep()}, fixed in this round}
 
-\item{tau.init}{Estimated value from \code{EM_var1_g.indep}, fixed in this round}
+\item{tau.init}{Estimated value from \code{EM_var1_g.indep()}, fixed in this round}
 
-\item{q.init}{Estimated value from \code{EM_var1_g.indep}, fixed in this round}
+\item{q.init}{Estimated value from \code{EM_var1_g.indep()}, fixed in this round}
 
 \item{maxiter}{Control for EM algorithm}
 

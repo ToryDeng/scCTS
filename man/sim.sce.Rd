@@ -5,20 +5,21 @@
 \alias{sim.sce}
 \title{A simulated scRNA-seq dataset}
 \format{
-## `sim.sce`
 This dataset contains 2k genes and 10k cells.
 }
-\source{
-This dataset is generated in R.
-}
 \usage{
-sim.sce
+library(popuDE)
+data("sim.sce")
 }
 \description{
 The code for generating it:
-\code{set.seed(123)}
-\code{nGenes <- 2000}
-\code{nCells <- 10000}
+```
+set.seed(123)
+nGenes <- 2000
+nCells <- 10000
+```
+}
+\details{
 \code{rawCounts <- matrix(rnbinom(nGenes * nCells, mu=1, size=10),nGenes,nCells)}
 \code{rownames(rawCounts) <- paste0("Gene", 1:nGenes)}
 \code{colnames(rawCounts) <- paste0("Cell", 1:nCells)}

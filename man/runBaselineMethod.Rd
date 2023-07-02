@@ -19,15 +19,15 @@ runBaselineMethod(
 )
 }
 \arguments{
-\item{sce}{A `SingleCellExperiment` object. Should contain normalized count matrix,
+\item{sce}{A \code{SingleCellExperiment} object. Should contain normalized count matrix,
 subject and cell type info.}
 
 \item{use.raw}{Whether to use the raw count matrix, which is normalized internally.}
 
 \item{use.norm.rep}{Which count matrix should be used. Default is the matrix
-accessed by \code{normcounts}.}
+accessed by \code{normcounts()}.}
 
-\item{normalize}{Whether to normalize the raw counts. Only relevant when `use.raw=TRUE`.}
+\item{normalize}{Whether to normalize the raw counts. Only relevant when \code{use.raw=TRUE}.}
 
 \item{log.input}{Whether the input expression matrix is log-transformed.}
 
