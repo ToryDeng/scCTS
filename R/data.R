@@ -1,25 +1,29 @@
 #' A simulated scRNA-seq dataset
 #'
-#' The code for generating it:
-#' ```
-#' set.seed(123)
-#' nGenes <- 2000
-#' nCells <- 10000
-#' ```
-#'
-#' \code{rawCounts <- matrix(rnbinom(nGenes * nCells, mu=1, size=10),nGenes,nCells)}
-#' \code{rownames(rawCounts) <- paste0("Gene", 1:nGenes)}
-#' \code{colnames(rawCounts) <- paste0("Cell", 1:nCells)}
-#' \code{celltypes <- paste0("celltype", sample.int(5, nCells, replace = T))}
-#' \code{subjects <- paste0("subject", sample.int(10, nCells, replace = T))}
-#' \code{cellAnnot <- data.frame(celltype=celltypes, subject=subjects)}
-#' \code{sim.sce <- SingleCellExperiment(assays=list(counts=raw.counts), colData=cell.annot)}
+#' The counts are sampled from negative binomial distribution.
 #'
 #'
 #' @format
-#' This dataset contains 2k genes and 10k cells.
+#' This dataset contains 2k genes and 10k cells in a \code{SingleCellExperiment} object.
 #'
 #' @usage
 #' library(popuDE)
 #' data("sim.sce")
+#'
+#' @details
+#'
+#' The code for generating it:
+#' ```{r}
+#' set.seed(123)
+#' nGenes <- 2000
+#' nCells <- 10000
+#' rawCounts <- matrix(rnbinom(nGenes * nCells, mu=1, size=10),nGenes,nCells)
+#' rownames(rawCounts) <- paste0("Gene", 1:nGenes)
+#' colnames(rawCounts) <- paste0("Cell", 1:nCells)
+#' celltypes <- paste0("celltype", sample.int(5, nCells, replace = T))
+#' subjects <- paste0("subject", sample.int(10, nCells, replace = T))
+#' cellAnnot <- data.frame(celltype=celltypes, subject=subjects)
+#' sim.sce <- SingleCellExperiment(assays=list(counts=rawCounts), colData=cellAnnot)
+#' ```
+#' @md
 "sim.sce"

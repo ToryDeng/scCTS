@@ -185,7 +185,7 @@ EM_est.param_moment <- function(dat.info.sum, keep.ix, min.cutoff, max.cutoff,
 #'
 #' @param dat.info.sum Output of function \code{data.info.reorganize()}
 #' contains summarized statistics of each sample
-#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscirpt),
+#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscirpt)
 #' @param maxiter Maximum iteration number
 #' @param tol EM stop control
 #' @param min.cutoff Remove samples with extreme small log fold change for robust estimtation
