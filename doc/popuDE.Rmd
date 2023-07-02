@@ -1,0 +1,80 @@
+---
+title: "popuDE Package Vignette"
+package: popuDE
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+vignette: >
+  %\VignetteIndexEntry{popuDE Package Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r knitr-options, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(popuDE)
+```
+
+
+# Input of `popuDE`
+`popuDE` is built on top of the Bioconductor's `SingleCellExperiment` class, which is a commonly used data structure for storing scRNA-seq datasets. In the package we provide a toy simulated dataset stored in a `SingleCellExperiment` object. You can directly load it through the code:
+```{r}
+data("sim.sce")
+sim.sce
+```
+The dataset `sim.sce` has 2,000 genes and 10,000 cells. There are two columns in the 
+`colData` slot, named as `celltype` and `subject`. The `celltype` column should store
+the cell type labels of each cells, and the `subject` column should store the subject labels of each cells. Although `popuDE` requires predefined cell type labels, you can first cluster the cells in your own dataset and then use the cluster labels if your dataset has no cell annotations.
+
+
+# Parameters of `popuDE`
+```{r}
+popuDE.res <- popuDE(sim.sce,use.raw = TRUE, subject.rep='subject', celltype.rep='celltype', numCores=2, effect_thres=0, tol=1e-5)
+```
+You can run `popuDE` in simply one line of code. `use.raw = TRUE` means `popuDE` will
+extract the raw counts from the `sim.sce` and normalize the raw counts internally. If
+`use.raw = FALSE` and no assay name is specified by `use.norm.rep`, `popuDE` will try
+to extract the normalized counts by calling `normcounts()` on the input `SingleCellExperiment` object. `subject.rep` and `celltype.rep` specify the names of
+columns storing the cell type and subject information. `numCores` is number of cores used for parallel computation. `effect_thres` is a threshold for filtering genes with negative mean. `tol` is the tolerance in the EM estimation.
+
+# Results of `popuDE`
+For each unique cell type, `popuDE` creates a list to store the corresponding estimated parameters and posterior probabilities for each gene to be cell-type specific. For example, we show some posterior probabilities of genes for `celltype1`:
+```{r}
+head(popuDE.res$celltype1$pp.d1)
+```
+
+
+# Run Classic DE Methods
+Except from our proposed method, this package also provides a common interface for classic DE methods such as the Wilcoxon test, t-test and [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html):
+```{r}
+bs.res <- runBaselineMethod(sim.sce,use.raw=TRUE, per.subject=TRUE,  
+                            celltype.rep='celltype', subject.rep='subject', 
+                            method='wilcox', numCores=2)
+```
+The parameter `method` specifies which method to use. `per.subject=TRUE` means the   method will run separately on each subject. If you set `per.subject=FALSE` then the
+method will ignore the subject information and run on all cells. Other parameters are the same as `popuDE`.
+
+
+# Results of Classic DE Methods
+Results of all classic methods share a common structure. Each type of information
+(statistics, P-values, adjusted P-values, etc.) is stored in a 3 dimensional array.
+The first dimension is for genes, the second dimension is for cell types, and the 
+third dimension is for subjects. If you set `per.subject=FALSE`, then the name of the
+last dimension is `"all"`.
+```{r}
+head(bs.res$wilcox.fdr_info[,,'subject1'])
+```
+
+
+# Session Info
+```{r}
+sessionInfo()
+```

@@ -1,12 +1,12 @@
 
 #' A wrapper function of the classic methods to find over-expressed DE genes
 #'
-#' @param sce A `SingleCellExperiment` object. Should contain normalized count matrix,
+#' @param sce A \code{SingleCellExperiment} object. Should contain normalized count matrix,
 #' subject and cell type info.
 #' @param use.raw Whether to use the raw count matrix, which is normalized internally.
 #' @param use.norm.rep Which count matrix should be used. Default is the matrix
-#' accessed by \code{normcounts}.
-#' @param normalize Whether to normalize the raw counts. Only relevant when `use.raw=TRUE`.
+#' accessed by \code{normcounts()}.
+#' @param normalize Whether to normalize the raw counts. Only relevant when \code{use.raw=TRUE}.
 #' @param log.input Whether the input expression matrix is log-transformed.
 #' @param log.base The base of log-transformation.
 #' @param subject.rep Column name for the subject info.

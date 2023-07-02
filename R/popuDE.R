@@ -1,16 +1,16 @@
 #' The main function of popuDE.
 #' It performs DE analysis on normalized (not log-normalized) count matrix.
 #'
-#' @param sce A `SingleCellExperiment` object. Should contain normalized count matrix,
+#' @param sce A \code{SingleCellExperiment} object. Should contain normalized count matrix,
 #' subject and cell type info.
-#' @param use.raw Whether to use the raw counts. If `TRUE`, the raw counts are then normalized by `popuDE`.
+#' @param use.raw Whether to use the raw counts. If \code{TRUE}, the raw counts are then normalized by \pkg{popuDE}.
 #' @param use.norm.rep Which count matrix should be used. Default is the matrix
-#' accessed by \code{normcounts}.
-#' @param subject.rep The name of column that stores subject labels of cells in `colData`.
-#' @param celltype.rep The name of column that stores cell type labels in `colData`.
+#' accessed by \code{normcounts()}.
+#' @param subject.rep The name of column that stores subject labels of cells in \code{colData} slot.
+#' @param celltype.rep The name of column that stores cell type labels in \code{colData} slot.
 #' @param log.input Whether the input expression matrix is log-transformed.
 #' @param log.base The base of log-transformation.
-#' @param effect_thres Threshold for filtering genes with negative mean (m_gk in Eq 3 in manuscript),
+#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript),
 #' @param maxiter Maximum iteration number
 #' @param tol EM stop control
 #' @param numCores Number of cores for parallel computation.

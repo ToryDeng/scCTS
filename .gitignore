@@ -8,5 +8,4 @@ reproducibility/*/*.rds
 reproducibility/*/*.Rmd
 reproducibility/*/*.nb.html
 inst/doc
-/doc/
 /Meta/

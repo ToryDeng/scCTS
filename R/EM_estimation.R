@@ -73,9 +73,9 @@ EM_var1_g.indep <- function(delta, tau, q, sigma, Y, maxiter=1000, tol=1e-5, ver
 #' @param max.cutoff Remove samples with extreme large log fold change for robust estimtation
 #' @param celltype.ix Cell type index
 #' @param pi_init Estimated initial value of \eqn{\pi}
-#' @param delta.init Estimated value from \code{EM_var1_g.indep}, fixed in this round
-#' @param tau.init Estimated value from \code{EM_var1_g.indep}, fixed in this round
-#' @param q.init Estimated value from \code{EM_var1_g.indep}, fixed in this round
+#' @param delta.init Estimated value from \code{EM_var1_g.indep()}, fixed in this round
+#' @param tau.init Estimated value from \code{EM_var1_g.indep()}, fixed in this round
+#' @param q.init Estimated value from \code{EM_var1_g.indep()}, fixed in this round
 #' @param maxiter Control for EM algorithm
 #' @param tol Control for EM algorithm
 #'
@@ -183,9 +183,9 @@ EM_est.param_moment <- function(dat.info.sum, keep.ix, min.cutoff, max.cutoff,
 #'
 #'
 #'
-#' @param dat.info.sum Output of function \code{data.info.reorganize}
+#' @param dat.info.sum Output of function \code{data.info.reorganize()}
 #' contains summarized statistics of each sample
-#' @param effect_thres Threshold for filtering genes with negative mean (m_gk in Eq 3 in manuscirpt),
+#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscirpt),
 #' @param maxiter Maximum iteration number
 #' @param tol EM stop control
 #' @param min.cutoff Remove samples with extreme small log fold change for robust estimtation

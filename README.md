@@ -30,8 +30,8 @@ Next, you can run `popuDE` with a single line of code:
 res <- popuDE(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype', numCores=2)
 ```
 - **use.raw:** Specifies whether to use the raw counts. If set to `TRUE`, the raw counts will be normalized by `popuDE`.
-- **subject.rep:** The name of the column that stores subject labels of cells in `colData`.
-- **celltype.rep:** The name of the column that stores cell type labels in `colData`.
+- **subject.rep:** The name of the column that stores subject labels of cells in the `colData` slot.
+- **celltype.rep:** The name of the column that stores cell type labels in the `colData` slot.
 - **numCores:** Number of cores for parallel computation.
 
 In the tested environment (see below), the code finishes running within a minute. The return value `res` is a list containing lists for each cell type. Each list contains
