@@ -34,6 +34,7 @@ Some explanations about the parameters:
 - **celltype.rep:** The name of the column that stores cell type labels in the `colData` slot.
 - **numCores:** Number of cores for parallel computation.
 
+
 In the [tested environment](#tested-environment), the code finishes running within a minute. The return value `res` is a list containing lists for each cell type. Each list contains
 posterior probabilities of genes and parameter estimations for a particular cell type. For example, you can extract the posterior probabilities of genes to show DE in `celltype1` using the following code:
 ```R
