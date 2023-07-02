@@ -60,5 +60,4 @@ res <- runBaselineMethod(sim.sce, use.raw = TRUE, normalize=TRUE,
                          subject.rep='subject', celltype.rep='celltype',
                          per.subject=TRUE, method='wilcox', numCores=2)
 
-
 }

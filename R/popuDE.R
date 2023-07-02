@@ -10,7 +10,7 @@
 #' @param celltype.rep The name of column that stores cell type labels in \code{colData} slot.
 #' @param log.input Whether the input expression matrix is log-transformed.
 #' @param log.base The base of log-transformation.
-#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript),
+#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript)
 #' @param maxiter Maximum iteration number
 #' @param tol EM stop control
 #' @param numCores Number of cores for parallel computation.
@@ -35,7 +35,6 @@
 #' # run popuDE
 #' res <- popuDE(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype',
 #' numCores=2)
-#'
 #'
 popuDE <- function(
     sce,

@@ -39,7 +39,7 @@ accessed by \code{normcounts()}.}
 
 \item{log.base}{The base of log-transformation.}
 
-\item{effect_thres}{Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript),}
+\item{effect_thres}{Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript)}
 
 \item{maxiter}{Maximum iteration number}
 
@@ -71,6 +71,5 @@ data(sim.sce)
 # run popuDE
 res <- popuDE(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype',
 numCores=2)
-
 
 }
