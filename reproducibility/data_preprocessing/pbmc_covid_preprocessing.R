@@ -2,7 +2,7 @@ reticulate::use_python(required = T, python = '/usr/local/anaconda3/envs/bio/bin
 suppressPackageStartupMessages(library(anndata))
 
 load.path <- "~/data/covid19_GSE158055/covid19_GSE158055_subset100k.h5ad"
-save.path <- "~/popuDE/reproducibility/data_preprocessing"
+save.path <- "~/scCTS/reproducibility/data_preprocessing"
 ad <- read_h5ad(load.path)
 
 suppressPackageStartupMessages(library(tidyverse))
@@ -10,7 +10,7 @@ suppressPackageStartupMessages(library(SingleCellExperiment))
 suppressPackageStartupMessages(library(doParallel))
 suppressPackageStartupMessages(library(scMerge))
 suppressPackageStartupMessages(library(scater))
-source("~/popuDE/R/utils.R")
+source("~/scCTS/R/utils.R")
 
 
 

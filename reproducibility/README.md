@@ -2,7 +2,7 @@
 - basic_visualization: visualize number of cells in each cell type and subject
 - batch_correction: compare multiple batch-effects correction methods
 - enrichment_analysis: perform gene list enrichment analysis on genes selected as 
-CTS genes by `popuDE` or other classic DE methods
+CTS genes by `scCTS` or other classic DE methods
 
 The code and results are stored in `html` files. you can view these files online by:
 1. click the file name.

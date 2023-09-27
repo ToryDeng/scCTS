@@ -3,12 +3,12 @@
 #' The counts are sampled from negative binomial distribution.
 #'
 #'
+#' @docType data
+#'
 #' @format
 #' This dataset contains 2k genes and 10k cells in a \code{SingleCellExperiment} object.
 #'
-#' @usage
-#' library(popuDE)
-#' data("sim.sce")
+#' @usage data("sim.sce")
 #'
 #' @details
 #'

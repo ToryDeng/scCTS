@@ -1,35 +1,35 @@
-# popuDE: Population-level Differetial Expression Analysis for scRNA-seq data
-`popuDE` is an R package for the statistical modeling of the 
-gene differential expression (DE) in scRNA-seq data. It identifies cell-type specific genes (markers) that consistently appear in historical population-level scRNA-seq (scRNA-seq) data. `popuDE` is built on top of the R package [`SingleCellExperiment`](https://bioconductor.org/packages/devel/bioc/html/SingleCellExperiment.html) and supports parallel computation.
+# scCTS: Population-level Differetial Expression Analysis for scRNA-seq data
+`scCTS` is an R package for the statistical modeling of the 
+gene differential expression (DE) in scRNA-seq data. It identifies cell-type specific genes (markers) that consistently appear in historical population-level scRNA-seq (scRNA-seq) data. `scCTS` is built on top of the R packagef [`SingleCellExperiment`](https://bioconductor.org/packages/devel/bioc/html/SingleCellExperiment.html) and supports parallel computation.
 
-Except from our proposed method, `popuDE` also provides a common interface for classic DE methods such as the Wilcoxon test, t-test and [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html).
+Except from our proposed method, `scCTS` also provides a common interface for classic DE methods such as the Wilcoxon test, t-test and [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html).
 
 
 ## Installation
-You can install `popuDE` from [GitHub](https://github.com/luxiao10/cts_gene) using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package:
+You can install `scCTS` from [GitHub](https://github.com/luxiao10/cts_gene) using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package:
 ```R
 if (!require("devtools", quietly = TRUE))
     install.packages("devtools")
     
 devtools::install_github('luxiao10/cts_gene', dependencies=T, build_vignettes = T)
-library(popuDE)
+library(scCTS)
 ```
 
 
 
 
 ## Getting started
-Here we give a simple example to demonstrate how to run `popuDE`. Once the package is installed, you can load the simulated dataset included in the package:
+Here we give a simple example to demonstrate how to run `scCTS`. Once the package is installed, you can load the simulated dataset included in the package:
 ```R
 data(sim.sce)
 ```
 `sim.sce` is a `SingleCellExperiment` object with 2,000 genes and 10,000 cells.
-Next, you can run `popuDE` with a single line of code:
+Next, you can run `scCTS` with a single line of code:
 ```R
-res <- popuDE(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype', numCores=2)
+res <- scCTS(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype', numCores=2)
 ```
 Some explanations about the parameters:
-- **use.raw:** Specifies whether to use the raw counts. If set to `TRUE`, the raw counts will be normalized by `popuDE`.
+- **use.raw:** Specifies whether to use the raw counts. If set to `TRUE`, the raw counts will be normalized by `scCTS`.
 - **subject.rep:** The name of the column that stores subject labels of cells in the `colData` slot.
 - **celltype.rep:** The name of the column that stores cell type labels in the `colData` slot.
 - **numCores:** Number of cores for parallel computation.
@@ -40,7 +40,7 @@ posterior probabilities of genes and parameter estimations for a particular cell
 ```R
 res$celltype1$pp.d1
 ```
-For more details about how to run `popuDE` and classic DE methods, please refer to `vignette("popuDE")`.
+For more details about how to run `scCTS` and classic DE methods, please refer to `vignette("scCTS")`.
 
 
 ## Reproducibility

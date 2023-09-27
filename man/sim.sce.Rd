@@ -8,7 +8,6 @@
 This dataset contains 2k genes and 10k cells in a \code{SingleCellExperiment} object.
 }
 \usage{
-library(popuDE)
 data("sim.sce")
 }
 \description{

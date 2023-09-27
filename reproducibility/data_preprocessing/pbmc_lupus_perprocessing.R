@@ -3,10 +3,10 @@ suppressPackageStartupMessages(library(SingleCellExperiment))
 suppressPackageStartupMessages(library(scater))
 suppressPackageStartupMessages(library(scMerge))
 suppressPackageStartupMessages(library(tidyverse))
-source("~/popuDE/R/utils.R")
+source("~/scCTS/R/utils.R")
 
 load.path <- "~/data/SLE_GSE96583/raw/GSE96583_RAW"
-save.path <- "~/popuDE/reproducibility/data_preprocessing"
+save.path <- "~/scCTS/reproducibility/data_preprocessing"
 
 # load count matrices
 sample.ids <- c('GSM2560245','GSM2560246', 'GSM2560247','GSM2560248','GSM2560249')

@@ -10,9 +10,9 @@ library(batchelor)
 
 
 
-pbmc_lupus <- readRDS("~/popuDE/reproducibility/batch_correction/pbmc_lupus_bc.rds")
-pbmc_covid <- readRDS("~/popuDE/reproducibility/batch_correction/pbmc_covid_bc.rds")
-save.path <- "~/popuDE/reproducibility/batch_correction"
+pbmc_lupus <- readRDS("~/scCTS/reproducibility/batch_correction/pbmc_lupus_bc.rds")
+pbmc_covid <- readRDS("~/scCTS/reproducibility/batch_correction/pbmc_covid_bc.rds")
+save.path <- "~/scCTS/reproducibility/batch_correction"
 BPPARAM <- MulticoreParam(workers = 20)
 
 for (bc.method in c('origin', 'limma', 'fastMNN', 'combat', 'scMerge', 'scMerge2')){

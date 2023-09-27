@@ -1,4 +1,4 @@
-Package: popuDE
+Package: scCTS
 Type: Package
 Title: Population-level Differetial Expression Analysis for single-cell RNA-seq
 Version: 0.1.0
@@ -11,10 +11,10 @@ Authors@R: c(
            role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7401-311X"))
     )
-Description: popuDE is an R package for the statistical modeling of the 
+Description: scCTS is an R package for the statistical modeling of the 
     gene differential expression. It identifies cell-type specific genes (markers)
     that consistently appear in historical population-level scRNA-seq (scRNA-seq) data.
-License: GPL-3
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: bzip2

@@ -1,9 +1,9 @@
-#' The main function of popuDE.
+#' The main function of scCTS.
 #' It performs DE analysis on normalized (not log-normalized) count matrix.
 #'
 #' @param sce A \code{SingleCellExperiment} object. Should contain normalized count matrix,
 #' subject and cell type info.
-#' @param use.raw Whether to use the raw counts. If \code{TRUE}, the raw counts are then normalized by \pkg{popuDE}.
+#' @param use.raw Whether to use the raw counts. If \code{TRUE}, the raw counts are then normalized by \pkg{scCTS}.
 #' @param use.norm.rep Which count matrix should be used. Default is the matrix
 #' accessed by \code{normcounts()}.
 #' @param subject.rep The name of column that stores subject labels of cells in \code{colData} slot.
@@ -32,11 +32,11 @@
 #' # load the simulated data
 #' data(sim.sce)
 #'
-#' # run popuDE
-#' res <- popuDE(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype',
+#' # run scCTS
+#' res <- scCTS(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype',
 #' numCores=2)
 #'
-popuDE <- function(
+scCTS <- function(
     sce,
     use.raw=FALSE,
     use.norm.rep=NULL,
@@ -57,7 +57,7 @@ popuDE <- function(
   stopifnot(all(c(subject.rep, celltype.rep) %in% names(colData(sce))))
   stopifnot(all(is.numeric(c(effect_thres, maxiter, tol, min.cutoff, max.cutoff))))
 
-  cli_h1("popuDE analysis")
+  cli_h1("scCTS analysis")
   # get normalized count matrix
   Ynorm <- get.expression.matrix(sce, use.raw, use.norm.rep, normalize=TRUE)
   if (log.input){
@@ -92,7 +92,7 @@ popuDE <- function(
   res <- EM_estimate(data.info, effect_thres=effect_thres, maxiter=maxiter,
                      tol=tol, min.cutoff=min.cutoff, max.cutoff=max.cutoff,
                      verbose=verbose)
-  cli_text("popuDE done!")
+  cli_text("scCTS done!")
   return(res)
 }
 
