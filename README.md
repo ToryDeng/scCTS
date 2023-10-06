@@ -6,12 +6,12 @@ Except from our proposed method, `scCTS` also provides a common interface for cl
 
 
 ## Installation
-You can install `scCTS` from [GitHub](https://github.com/luxiao10/cts_gene) using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package:
+You can install `scCTS` from [GitHub](https://github.com/luxiao10/scCTS) using the [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html) package:
 ```R
 if (!require("devtools", quietly = TRUE))
     install.packages("devtools")
     
-devtools::install_github('luxiao10/cts_gene', dependencies=T, build_vignettes = T)
+devtools::install_github('luxiao10/scCTS', dependencies=T, build_vignettes = T)
 library(scCTS)
 ```
 
