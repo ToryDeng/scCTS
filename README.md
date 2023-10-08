@@ -52,13 +52,13 @@ If you want to reproduce results shown in the paper, please refer to the directo
 
 
 ## Tested environment
-# Environment 1
+### Environment 1
 - CPU: AMD Ryzen Threadripper 3990X 64-Core Processor
 - Memory: 256GB
 - System: Ubuntu 20.04.6 LTS
 - R version: 4.3.0
 
-# Environment 2
+### Environment 2
 - CPU: Intel(R) Xeon(R) Gold 6240R CPU @ 2.40GHz
 - Memory: 256GB
 - System: Ubuntu 22.04.3 LTS
