@@ -1,4 +1,5 @@
-# scCTS: Population-level Differetial Expression Analysis for scRNA-seq data
+# scCTS: identifying the cell type specific marker genes from population-level single-cell RNA-seq
+
 `scCTS` is an R package for the statistical modeling of the 
 gene differential expression (DE) in scRNA-seq data. It identifies cell-type specific genes (markers) that consistently appear in historical population-level scRNA-seq (scRNA-seq) data. `scCTS` is built on top of the R package [`SingleCellExperiment`](https://bioconductor.org/packages/devel/bioc/html/SingleCellExperiment.html) and supports parallel computation.
 
