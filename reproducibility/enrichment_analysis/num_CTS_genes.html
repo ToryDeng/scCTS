@@ -11,6 +11,7 @@
 
 <meta name="author" content="Tao Deng" />
 
+<meta name="date" content="2023-10-17" />
 
 <title>Number of CTS genes called by scCTS</title>
 
@@ -54455,7 +54456,7 @@ font-size: 0.95em;
 
 <h1 class="title toc-ignore">Number of CTS genes called by scCTS</h1>
 <h4 class="author">Tao Deng</h4>
-<h4 class="date">r”Sys.Date()”</h4>
+<h4 class="date">2023-10-17</h4>
 
 </div>
 
@@ -54470,14 +54471,24 @@ library(tidyverse)
 
 
 devtools::load_all(&quot;.&quot;)</code></pre>
-<pre class="r"><code>load.or.run &lt;- function(our.method, bs.method, dataset, sub.rep, ct.rep, per.subject){
-  norm.rep &lt;- if (per.subject) NULL else {&quot;scMerge_logcounts&quot;}
-  # norm.rep &lt;- ifelse(per.subject, NULL, &quot;scMerge_logcounts&quot;)
-  count.type &lt;- ifelse(per.subject, &#39;uncorrected_normcounts&#39;, &#39;corrected_lognormcounts&#39;)
+</div>
+<div id="load-scrna-seq-datasets" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Load scRNA-seq
+datasets:</h2>
+<pre class="r"><code>pbmc_lupus &lt;- readRDS(&quot;~/scCTS/reproducibility/batch_correction/pbmc_lupus_bc_dr.rds&quot;)
+pbmc_covid &lt;- readRDS(&quot;~/scCTS/reproducibility/batch_correction/pbmc_covid_bc_dr.rds&quot;)</code></pre>
+</div>
+<div id="define-evaluation-functions" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> Define evaluation
+functions</h2>
+<pre class="r"><code>load.or.run &lt;- function(our.method, bs.method, dataset, sub.rep, ct.rep, per.subject, use.corrected){
+  # norm.rep &lt;- if (per.subject) NULL else {&quot;scMerge_logcounts&quot;}
+  norm.rep &lt;- if (use.corrected) {&quot;scMerge_logcounts&quot;} else NULL
+  count.type &lt;- ifelse(use.corrected, &#39;corrected_lognormcounts&#39;, &#39;uncorrected_normcounts&#39;)
   save.path &lt;- file.path(&#39;result&#39;, dataset, count.type)
   if (!dir.exists(save.path)) dir.create(save.path)
-  bs.file.prefix &lt;- ifelse(per.subject, &#39;per_subject.rds&#39;, &#39;as_whole.rds&#39;)
-  bs.res.file &lt;- paste(bs.method, bs.file.prefix, sep = &#39;_&#39;)
+  bs.file.suffix &lt;- ifelse(per.subject, &#39;per_subject.rds&#39;, &#39;as_whole.rds&#39;)
+  bs.res.file &lt;- paste(bs.method, bs.file.suffix, sep = &#39;_&#39;)
   bs.res.path &lt;- file.path(save.path, bs.res.file)
   our.res.file &lt;- paste0(our.method, &#39;.rds&#39;)
   our.res.path &lt;- file.path(save.path, our.res.file)
@@ -54487,7 +54498,7 @@ devtools::load_all(&quot;.&quot;)</code></pre>
     bs.res &lt;- runBaselineMethod(
       get(dataset), per.subject=per.subject, numCores=20, celltype.rep=ct.rep,
       subject.rep=sub.rep, method=bs.method, use.norm.rep=norm.rep,
-      log.input=!per.subject)
+      log.input=!use.corrected)
     saveRDS(bs.res, bs.res.path)
   }
   
@@ -54495,7 +54506,7 @@ devtools::load_all(&quot;.&quot;)</code></pre>
     scCTS.res &lt;- scCTS(
       get(dataset), effect_thres=0, tol=1e-5, numCores=20, celltype=ct.rep,
       subject=sub.rep, use.norm.rep=norm.rep, 
-      log.input=!per.subject)
+      log.input=!use.corrected)
     saveRDS(scCTS.res, our.res.path)
   }
   return(list(our=scCTS.res, bs=bs.res))
@@ -54541,18 +54552,34 @@ devtools::load_all(&quot;.&quot;)</code></pre>
 <div id="pbmc-sle-uncorrected-per-subject-original-results" class="section level1" number="2">
 <h1><span class="header-section-number">2</span> PBMC-SLE, uncorrected
 per subject (original results)</h1>
-<pre class="r"><code>res &lt;- load.or.run(&#39;scCTS&#39;, &#39;wilcox&#39;, &#39;pbmc_lupus&#39;, &#39;subject&#39;, &#39;celltype&#39;, per.subject=TRUE)
+<pre class="r"><code>res &lt;- load.or.run(&#39;scCTS&#39;, &#39;wilcox&#39;, &#39;pbmc_lupus&#39;, &#39;subject&#39;, &#39;celltype&#39;, per.subject=TRUE, use.corrected=FALSE)
 gen.num.CTS.genes.in.num.samples(res$our, res$bs, &#39;fdr&#39;, 0.05, c(-Inf,0,8,16,24))</code></pre>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-1ecc8cd152d574c9c2b5" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-1ecc8cd152d574c9c2b5">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["(-Inf,0]","(0,8]","(8,16]","(16,24]"],[38,624,178,93],[0,18,347,622],[151,1135,300,233],[174,408,45,25],[0,11,257,137],[0,13,272,453],[391,660,90,65]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>B.cells<\/th>\n      <th>CD14..Monocytes<\/th>\n      <th>CD4.T.cells<\/th>\n      <th>CD8.T.cells<\/th>\n      <th>Dendritic.cells<\/th>\n      <th>FCGR3A..Monocytes<\/th>\n      <th>NK.cells<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","buttons":["copy","csv","excel","pdf","print"],"lengthMenu":[[10,25,50,-1],["10","25","50","All"]],"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-1d02ad9fd3d2d81b2fb6" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1d02ad9fd3d2d81b2fb6">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["(-Inf,0]","(0,8]","(8,16]","(16,24]"],[38,624,178,93],[0,18,347,622],[151,1135,300,233],[174,408,45,25],[0,11,257,137],[0,13,272,453],[391,660,90,65]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>B.cells<\/th>\n      <th>CD14..Monocytes<\/th>\n      <th>CD4.T.cells<\/th>\n      <th>CD8.T.cells<\/th>\n      <th>Dendritic.cells<\/th>\n      <th>FCGR3A..Monocytes<\/th>\n      <th>NK.cells<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","buttons":["copy","csv","excel","pdf","print"],"lengthMenu":[[10,25,50,-1],["10","25","50","All"]],"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
 </div>
-<div id="pbmc-covid19-uncorrected-per-subject" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> PBMC-COVID19,
+<div id="pbmc-sle-per-corrected-sample" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> PBMC-SLE, per corrected
+sample</h1>
+<pre class="r"><code>res &lt;- load.or.run(&#39;scCTS&#39;, &#39;wilcox&#39;, &#39;pbmc_lupus&#39;, &#39;subject&#39;, &#39;celltype&#39;, per.subject=TRUE, use.corrected=TRUE)
+gen.num.CTS.genes.in.num.samples(res$our, res$bs, &#39;fdr&#39;, 0.05, c(-Inf,0,8,16,24))</code></pre>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-57f6f57efbef33151a44" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-57f6f57efbef33151a44">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["(-Inf,0]","(0,8]","(8,16]","(16,24]"],[114,443,95,51],[219,244,138,142],[739,611,256,156],[202,512,51,14],[24,52,22,9],[137,102,51,50],[708,620,138,50]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>B.cells<\/th>\n      <th>CD14..Monocytes<\/th>\n      <th>CD4.T.cells<\/th>\n      <th>CD8.T.cells<\/th>\n      <th>Dendritic.cells<\/th>\n      <th>FCGR3A..Monocytes<\/th>\n      <th>NK.cells<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","buttons":["copy","csv","excel","pdf","print"],"lengthMenu":[[10,25,50,-1],["10","25","50","All"]],"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="pbmc-covid19-uncorrected-per-subject" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> PBMC-COVID19,
 uncorrected per subject</h1>
-<pre class="r"><code>res &lt;- load.or.run(&#39;scCTS&#39;, &#39;wilcox&#39;, &#39;pbmc_covid&#39;, &#39;sampleID&#39;, &#39;majorType&#39;, per.subject=TRUE)
+<pre class="r"><code>res &lt;- load.or.run(&#39;scCTS&#39;, &#39;wilcox&#39;, &#39;pbmc_covid&#39;, &#39;sampleID&#39;, &#39;majorType&#39;, per.subject=TRUE, use.corrected=FALSE)
 gen.num.CTS.genes.in.num.samples(res$our, res$bs, &#39;fdr&#39;, 0.05, c(-Inf,0,4,8,13))</code></pre>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-3831a9723503dadade5c" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-3831a9723503dadade5c">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["(-Inf,0]","(0,4]","(4,8]","(8,13]"],[477,1300,506,742],[193,1476,1051,1061],[1115,2564,984,822],[2,63,787,436],[35,426,371,423],[1,71,527,2256],[1856,1803,471,425],[0,38,340,1223]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>B<\/th>\n      <th>CD4<\/th>\n      <th>CD8<\/th>\n      <th>DC<\/th>\n      <th>Mega<\/th>\n      <th>Mono<\/th>\n      <th>NK<\/th>\n      <th>Plasma<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","buttons":["copy","csv","excel","pdf","print"],"lengthMenu":[[10,25,50,-1],["10","25","50","All"]],"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-3000925f3f09eb3bf9b5" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-3000925f3f09eb3bf9b5">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["(-Inf,0]","(0,4]","(4,8]","(8,13]"],[477,1300,506,742],[193,1476,1051,1061],[1115,2564,984,822],[2,63,787,436],[35,426,371,423],[1,71,527,2256],[1856,1803,471,425],[0,38,340,1223]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>B<\/th>\n      <th>CD4<\/th>\n      <th>CD8<\/th>\n      <th>DC<\/th>\n      <th>Mega<\/th>\n      <th>Mono<\/th>\n      <th>NK<\/th>\n      <th>Plasma<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","buttons":["copy","csv","excel","pdf","print"],"lengthMenu":[[10,25,50,-1],["10","25","50","All"]],"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="pbmc-covid19-per-corrected-sample" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> PBMC-COVID19, per
+corrected sample</h1>
+<pre class="r"><code>res &lt;- load.or.run(&#39;scCTS&#39;, &#39;wilcox&#39;, &#39;pbmc_covid&#39;, &#39;sampleID&#39;, &#39;majorType&#39;, per.subject=TRUE, use.corrected=TRUE)
+gen.num.CTS.genes.in.num.samples(res$our, res$bs, &#39;fdr&#39;, 0.05, c(-Inf,0,4,8,13))</code></pre>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-cb6b48d6c981e08d9bbe" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-cb6b48d6c981e08d9bbe">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["(-Inf,0]","(0,4]","(4,8]","(8,13]"],[514,1150,543,1042],[1248,1061,671,1229],[2269,1925,856,870],[79,142,210,16],[402,297,187,462],[732,765,464,939],[2800,1268,340,208],[113,192,273,296]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>B<\/th>\n      <th>CD4<\/th>\n      <th>CD8<\/th>\n      <th>DC<\/th>\n      <th>Mega<\/th>\n      <th>Mono<\/th>\n      <th>NK<\/th>\n      <th>Plasma<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","buttons":["copy","csv","excel","pdf","print"],"lengthMenu":[[10,25,50,-1],["10","25","50","All"]],"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 
 

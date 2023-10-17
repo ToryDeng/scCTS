@@ -13,7 +13,7 @@ You can install `scCTS` from [GitHub](https://github.com/luxiao10/scCTS) using t
 if (!require("devtools", quietly = TRUE))
     install.packages("devtools")
     
-devtools::install_github('luxiao10/scCTS', dependencies=T, build_vignettes = T)
+devtools::install_github('ToryDeng/scCTS', dependencies=T, build_vignettes = T)
 library(scCTS)
 ```
 
