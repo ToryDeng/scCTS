@@ -1,7 +1,7 @@
 reticulate::use_python(required = T, python = '/usr/local/anaconda3/envs/bio/bin/')
 suppressPackageStartupMessages(library(anndata))
 
-load.path <- "~/data/covid19_GSE158055/covid19_GSE158055_subset100k.h5ad"
+load.path <- "~/scCTS/reproducibility/data_preprocessing/covid19_GSE158055_subset100k.h5ad"
 save.path <- "~/scCTS/reproducibility/data_preprocessing"
 ad <- read_h5ad(load.path)
 

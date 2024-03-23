@@ -5,7 +5,7 @@ suppressPackageStartupMessages(library(scMerge))
 suppressPackageStartupMessages(library(tidyverse))
 source("~/scCTS/R/utils.R")
 
-load.path <- "~/data/SLE_GSE96583/raw/GSE96583_RAW"
+load.path <- "/data/scRNA-seq/SLE_GSE96583/raw/GSE96583_RAW"
 save.path <- "~/scCTS/reproducibility/data_preprocessing"
 
 # load count matrices

@@ -42,7 +42,7 @@ runBaselineMethod <- function(
     subject.rep='subject',
     celltype.rep='celltype',
     per.subject=TRUE,
-    method=c('wilcox', 'twelch', 'DEseq'),
+    method=c('wilcox', 'twelch', 'ZINBWaVE_DEseq2'),
     numCores=NULL
 ){
   # check arguments
@@ -51,7 +51,7 @@ runBaselineMethod <- function(
   # set parallel computation
   numCores.used <- set.parallel.computation(numCores)
   # get normalized count matrix
-  Ynorm <- get.expression.matrix(sce, use.raw, use.norm.rep, normalize)
+  Y <- get.expression.matrix(sce, use.raw, use.norm.rep, normalize)
   # get (unique) cell types
   celltypes <- colData(sce)[[celltype.rep]] # convert to char list
 
@@ -65,13 +65,13 @@ runBaselineMethod <- function(
     cli_progress_bar("Analyzing each subject", total = length(unique.subjects), type = "tasks")
     for (sub in unique.subjects){
       # cli_h2("Current subject: {sub}")
-      sub.Ynorm <- Ynorm[,subjects == sub]
+      sub.Y <- Y[,subjects == sub]
       sub.cts <- celltypes[subjects == sub]
       sub.result = switch(
         method,
-        "wilcox" = BaselineMethod.wilcox(sub.Ynorm, sub.cts, numCores.used),
-        "twelch" = BaselineMethod.twelch(sub.Ynorm, sub.cts, numCores.used, log.input, log.base),
-        "DESeq2" = BaselineMethod.DESeq2(sub.Ynorm, sub.cts, numCores.used, include.subject=F),
+        "wilcox" = BaselineMethod.wilcox(sub.Y, sub.cts, numCores.used),
+        "twelch" = BaselineMethod.twelch(sub.Y, sub.cts, numCores.used, log.input, log.base),
+        "ZINBWaVE_DEseq2" = BaselineMethod.ZINBWaVE_DEseq2(sub.Y, sub.cts, numCores.used),
         stop(str_glue("No method matched for {method}"))
       )
       # set the name of the last dim of each array as subject name, and then store
@@ -90,9 +90,9 @@ runBaselineMethod <- function(
     subjects <- colData(sce)[[subject.rep]]
     all.result = switch(
       method,
-      "wilcox" = BaselineMethod.wilcox(Ynorm, celltypes, numCores.used),
-      "twelch" = BaselineMethod.twelch(Ynorm, celltypes, numCores.used, log.input, log.base),
-      "DESeq2" = BaselineMethod.DESeq2(sub.Ynorm, sub.cts, numCores.used, subjects=subjects, include.subject=F),
+      "wilcox" = BaselineMethod.wilcox(Y, celltypes, numCores.used),
+      "twelch" = BaselineMethod.twelch(Y, celltypes, numCores.used, log.input, log.base),
+      "ZINBWaVE_DEseq2" = BaselineMethod.ZINBWaVE_DEseq2(Y, celltypes, numCores.used),
       stop(str_glue("No method matched for {method}"))
     )
     all.result <- lapply(all.result, function(arr){dimnames(arr)[3] <- "all";arr})
@@ -200,24 +200,20 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used, log.input, log.b
 
 
 
-#' DESeq2
+#' ZINB-WaVE + DESeq2
 #'
 #' @param expr A gene by cell matrix storing the expression values
 #' @param celltypes A vector indicating cell types of each cell
 #' @param nCores.used The number of cores actually used
-#' @param subjects A vector indicating subjects of each cell
-#' @param include.subject Whether to include subject factor in the formula
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first dim
 #' is genes, the second dim is cell types, and the last dim is a single subject.
 #' @import DESeq2
-#' @importFrom stringr str_c
-#' @importFrom stats as.formula
 #' @importFrom BiocParallel MulticoreParam
 #'
-BaselineMethod.DESeq2 <- function(expr, celltypes, nCores.used, subjects=NULL, include.subject=T){
+BaselineMethod.ZINBWaVE_DESeq2 <- function(expr, celltypes, nCores.used){
   stopifnot(all(expr %% 1 == 0))
-  BPPARAM <- MulticoreParam(nCores.used)
+  BPPARAM <- BiocParallel::MulticoreParam(nCores.used)
 
   ucelltypes <- unique(celltypes)
   cleaned.celltypes <- make.names(celltypes)
@@ -225,39 +221,34 @@ BaselineMethod.DESeq2 <- function(expr, celltypes, nCores.used, subjects=NULL, i
   # create 3-dim empty arrays to store results for a single subject (i.e, the last dim is 1)
   array.tmp <- array(NA, dim=c(length(rownames(expr)), length(ucelltypes), 1),
                      dimnames = list(rownames(expr), ucelltypes))
-  DESeq2.res <- list('DESeq2.stat_info' = array.tmp,
-                     'DESeq2.pval_info' = array.tmp,
-                     'DESeq2.fdr_info' = array.tmp,
-                     'DESeq2.log2FC_info' = array.tmp)
+  ZINBWaVE_DESeq2.res <- list('ZINBWaVE_DESeq2.stat_info' = array.tmp,
+                              'ZINBWaVE_DESeq2.pval_info' = array.tmp,
+                              'ZINBWaVE_DESeq2.fdr_info' = array.tmp,
+                              'ZINBWaVE_DESeq2.log2FC_info' = array.tmp)
 
-  if (include.subject){
-    stopifnot(!is.null(subjects))
-    colD <- data.frame(celltype=factor(cleaned.celltypes), subject=factor(subjects))
-    formula <- as.formula(~0+celltype+subject)
-  }else{
-    colD <- data.frame(celltype=factor(cleaned.celltypes))
-    formula <- as.formula(~0+celltype)
-  }
-  # not include intercept: https://support.bioconductor.org/p/118090/
-  dds <- DESeqDataSetFromMatrix(countData = expr, colData = colD, design = formula)
-  dds <- DESeq(dds, sfType = 'poscounts', parallel=T, BPPARAM=BPPARAM)
-
+  # build a SummarizedExperiment
+  core <- SummarizedExperiment(assays=SimpleList(counts=as.matrix(expr)),
+                               colData=data.frame(celltype = as.factor(cleaned.celltypes)))
+  # ZINB-WaVE
+  core_zinb <- zinbwave(core, K = 2, epsilon=1000, observationalWeights = TRUE, BPPARAM=BPPARAM)
+  # DESeq2
   for (cleaned.uct in cleaned.ucelltypes){
-    all.rest <- str_c("celltype", cleaned.ucelltypes[cleaned.ucelltypes != cleaned.uct])
-    contrast <- list(c(paste0('celltype', cleaned.uct)), all.rest)
-    # reduce NAs: https://support.bioconductor.org/p/9135436/
-    ct.res <- results(dds, pAdjustMethod ='fdr', contrast = contrast, alpha=0.05,
-                      listValues = c(1, -1/length(all.rest)), altHypothesis="greater",
-                      cooksCutoff = FALSE, independentFiltering = FALSE,
-                      parallel=T, BPPARAM=BPPARAM)  # the order of genes doesn't change
+    # build two groups
+    is.current.celltype <- (cleaned.celltypes == cleaned.uct)
+    colData(core_zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
 
+    dds <- DESeqDataSet(core_zinb, design = ~ group)
+    dds <- DESeq(dds, sfType="poscounts", useT=TRUE, minmu=1e-6, parallel=T, BPPARAM=BPPARAM)
+    ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
+                              alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
+                              parallel=T, BPPARAM=BPPARAM)
+    # store results
     ucelltype <- ucelltypes[cleaned.ucelltypes == cleaned.uct]
-    DESeq2.res$DESeq2.stat_info[,ucelltype,1] <- ct.res[['stat']]
-    DESeq2.res$DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
-    DESeq2.res$DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
-    DESeq2.res$DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
+    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.stat_info[,ucelltype,1] <- ct.res[['stat']]
+    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
+    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
+    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
   }
-  return(DESeq2.res)
+  return(ZINBWaVE_DESeq2.res)
 }
-
 
