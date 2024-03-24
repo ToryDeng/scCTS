@@ -14,8 +14,9 @@ runBaselineMethod(
   subject.rep = "subject",
   celltype.rep = "celltype",
   per.subject = TRUE,
-  method = c("wilcox", "twelch", "DEseq"),
-  numCores = NULL
+  method = c("wilcox", "twelch", "DEseq2", "NSforest"),
+  numCores = NULL,
+  python.path = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ Otherwise perform DE analysis for all cells.}
 \item{method}{A string indicating which DE method to use.}
 
 \item{numCores}{Number of cores to use. Default is \code{NULL}.}
+
+\item{python.path}{The path to the python. Need to install \pkg{nsforest} in advance.}
 }
 \value{
 A list of 3-dim arrays. Each array is corresponding to a stat. The first dim

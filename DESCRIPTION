@@ -18,30 +18,31 @@ License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: bzip2
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Depends: 
     R (>= 4.1.0)
 Imports:
-    doParallel,
-    BiocParallel,
-    parallel,
-    DelayedArray,
-    SummarizedExperiment,
-    SingleCellExperiment,
-    matrixTests,
-    DESeq2,
-    Matrix,
-    data.table,
-    cli,
-    stringr,
     abind,
+    BiocParallel,
+    cli,
+    doParallel,
+    DESeq2,
+    DelayedArray,
+    data.table,
     foreach,
     iterators,
-    methods
+    matrixTests,
+    methods,
+    Matrix,
+    parallel,
+    reticulate,
+    SummarizedExperiment,
+    SingleCellExperiment,
+    S4Vectors,
+    stringr,
+    zinbwave
 Suggests: 
     knitr,
     rmarkdown,
     BiocStyle
 VignetteBuilder: knitr
-
-

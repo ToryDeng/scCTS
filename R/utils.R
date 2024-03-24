@@ -37,11 +37,11 @@ create.res.list <- function(items, columns, rows){
 #' Get the expression matrix
 #'
 #' @param sce A SingleCellExperiment object
-#' @param use.raw Whether use raw counts data. Default is `FALSE`. If `normalize=FALSE`, the function
-#' returns the raw counts directly. If `normalize=TRUE`, the function returns the
+#' @param use.raw Whether use raw counts data. Default is \code{FALSE}. If \code{normalize=FALSE}, the function
+#' returns the raw counts directly. If \code{normalize=TRUE}, the function returns the
 #' normcounts.
 #' @param use.norm.rep Which representation in \code{assayNames(sce)} will be used.
-#' @param normalize Whether normalize the data. Default is `FALSE`. Only valid when `use.raw=TRUE`.
+#' @param normalize Whether normalize the data. Default is \code{FALSE}. Only valid when \code{use.raw=TRUE}.
 #'
 #' @return A dense expression matrix (genes by cells).
 #'

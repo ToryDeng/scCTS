@@ -15,6 +15,7 @@
 #' Otherwise perform DE analysis for all cells.
 #' @param method  A string indicating which DE method to use.
 #' @param numCores Number of cores to use. Default is \code{NULL}.
+#' @param python.path The path to the python. Need to install \pkg{nsforest} in advance.
 #'
 #' @return A list of 3-dim arrays. Each array is corresponding to a stat. The first dim
 #' is for genes, the second dim is for cell types, and the last dim is for subjects.
@@ -42,8 +43,9 @@ runBaselineMethod <- function(
     subject.rep='subject',
     celltype.rep='celltype',
     per.subject=TRUE,
-    method=c('wilcox', 'twelch', 'ZINBWaVE_DEseq2'),
-    numCores=NULL
+    method=c('wilcox', 'twelch', 'DEseq2', 'NSforest'),
+    numCores=NULL,
+    python.path=NULL
 ){
   # check arguments
   stopifnot(all(c(subject.rep, celltype.rep) %in% names(colData(sce))),
@@ -71,7 +73,8 @@ runBaselineMethod <- function(
         method,
         "wilcox" = BaselineMethod.wilcox(sub.Y, sub.cts, numCores.used),
         "twelch" = BaselineMethod.twelch(sub.Y, sub.cts, numCores.used, log.input, log.base),
-        "ZINBWaVE_DEseq2" = BaselineMethod.ZINBWaVE_DEseq2(sub.Y, sub.cts, numCores.used),
+        "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used),
+        "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, python.path),
         stop(str_glue("No method matched for {method}"))
       )
       # set the name of the last dim of each array as subject name, and then store
@@ -92,7 +95,8 @@ runBaselineMethod <- function(
       method,
       "wilcox" = BaselineMethod.wilcox(Y, celltypes, numCores.used),
       "twelch" = BaselineMethod.twelch(Y, celltypes, numCores.used, log.input, log.base),
-      "ZINBWaVE_DEseq2" = BaselineMethod.ZINBWaVE_DEseq2(Y, celltypes, numCores.used),
+      "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, numCores.used),
+      "NSforest" = BaselineMethod.NSforest(Y, celltypes, python.path),
       stop(str_glue("No method matched for {method}"))
     )
     all.result <- lapply(all.result, function(arr){dimnames(arr)[3] <- "all";arr})
@@ -202,18 +206,21 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used, log.input, log.b
 
 #' ZINB-WaVE + DESeq2
 #'
-#' @param expr A gene by cell matrix storing the expression values
+#' @param expr A gene by cell matrix storing the expression values. Should be raw counts.
 #' @param celltypes A vector indicating cell types of each cell
 #' @param nCores.used The number of cores actually used
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first dim
 #' is genes, the second dim is cell types, and the last dim is a single subject.
-#' @import DESeq2
+#' @importFrom DESeq2 DESeqDataSet DESeq results
 #' @importFrom BiocParallel MulticoreParam
+#' @importFrom S4Vectors SimpleList
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom zinbwave zinbwave
 #'
-BaselineMethod.ZINBWaVE_DESeq2 <- function(expr, celltypes, nCores.used){
+BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
   stopifnot(all(expr %% 1 == 0))
-  BPPARAM <- BiocParallel::MulticoreParam(nCores.used)
+  BPPARAM <- MulticoreParam(nCores.used)
 
   ucelltypes <- unique(celltypes)
   cleaned.celltypes <- make.names(celltypes)
@@ -221,10 +228,10 @@ BaselineMethod.ZINBWaVE_DESeq2 <- function(expr, celltypes, nCores.used){
   # create 3-dim empty arrays to store results for a single subject (i.e, the last dim is 1)
   array.tmp <- array(NA, dim=c(length(rownames(expr)), length(ucelltypes), 1),
                      dimnames = list(rownames(expr), ucelltypes))
-  ZINBWaVE_DESeq2.res <- list('ZINBWaVE_DESeq2.stat_info' = array.tmp,
-                              'ZINBWaVE_DESeq2.pval_info' = array.tmp,
-                              'ZINBWaVE_DESeq2.fdr_info' = array.tmp,
-                              'ZINBWaVE_DESeq2.log2FC_info' = array.tmp)
+  DESeq2.res <- list('DESeq2.stat_info' = array.tmp,
+                     'DESeq2.pval_info' = array.tmp,
+                     'DESeq2.fdr_info' = array.tmp,
+                     'DESeq2.log2FC_info' = array.tmp)
 
   # build a SummarizedExperiment
   core <- SummarizedExperiment(assays=SimpleList(counts=as.matrix(expr)),
@@ -239,16 +246,76 @@ BaselineMethod.ZINBWaVE_DESeq2 <- function(expr, celltypes, nCores.used){
 
     dds <- DESeqDataSet(core_zinb, design = ~ group)
     dds <- DESeq(dds, sfType="poscounts", useT=TRUE, minmu=1e-6, parallel=T, BPPARAM=BPPARAM)
-    ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
+    ct.res <- results(object = dds, contrast = c("group", cleaned.uct, "others"),
                               alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
                               parallel=T, BPPARAM=BPPARAM)
     # store results
     ucelltype <- ucelltypes[cleaned.ucelltypes == cleaned.uct]
-    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.stat_info[,ucelltype,1] <- ct.res[['stat']]
-    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
-    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
-    ZINBWaVE_DESeq2.res$ZINBWaVE_DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
+    DESeq2.res$DESeq2.stat_info[,ucelltype,1] <- ct.res[['stat']]
+    DESeq2.res$DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
+    DESeq2.res$DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
+    DESeq2.res$DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
   }
-  return(ZINBWaVE_DESeq2.res)
+  return(DESeq2.res)
 }
+
+
+
+#' NS-Forest
+#'
+#' @param expr A gene by cell matrix storing the expression values. Should be log-normalized counts.
+#' @param celltypes A vector indicating cell types of each cell
+#' @param python.path The path to the python. Need to install \pkg{nsforest} in advance.
+#'
+#' @return A list of 3-dim arrays. Each array corresponds to a stat. The first dim
+#' is genes, the second dim is cell types, and the last dim is a single subject.
+#' \strong{Note}: the length of the first dim may not equal the total number of genes,
+#' since \emph{negative markers} defined in the \href{https://doi.org/10.1101/gr.275569.121}{paper}
+#' are filtered. Besides some values may be \code{NA}s due to the inconsistency between
+#' \emph{positive markers} of each cell type.
+#'
+#' @importFrom reticulate use_python import r_to_py
+#' @importFrom utils read.csv
+#'
+BaselineMethod.NSforest <- function(expr, celltypes, python.path){
+  # import python packages
+  use_python(python.path)
+  nsforest <- import("nsforest")
+  ad <- import("anndata")
+
+  ucelltypes <- unique(celltypes)
+  X <- r_to_py(t(expr))
+  obs <- r_to_py(data.frame(celltype = celltypes))
+  # create the anndata object
+  adata <- ad$AnnData(X=X, obs=obs)
+  adata$var_names <- r_to_py(rownames(expr))
+  # run NSForest for all cell types
+  # the detailed results are saved in ./NSForest_outputs/NSForest_supplementary.csv
+  nsforest$NSForest(adata, cluster_header='celltype',
+                    n_top_genes=adata$n_vars, n_binary_genes=adata$n_vars)
+  supp <- read.csv("./NSForest_outputs/NSForest_supplementary.csv")
+  # create 3-dim empty arrays to store results for a single subject (i.e, the last dim is 1)
+  unique_binary_genes <- unique(supp$binary_genes)
+  unique_celltypes <- unique(supp$clusterName)
+  array.tmp <- array(NA, dim=c(length(unique_binary_genes), length(unique_celltypes), 1),
+                     dimnames = list(unique_binary_genes, unique_celltypes))
+  NSforest.res <- list('NSforest.rf_feature_importance' = array.tmp,
+                       'NSforest.binary_score' = array.tmp,
+                       'NSforest.cluster_median' = array.tmp)
+  for(i in 1:nrow(supp)){
+    g <- supp$binary_genes[i]
+    ct <- supp$clusterName[i]
+    NSforest.res$NSforest.rf_feature_importance[g, ct, 1] <- supp$rf_feature_importance[i]
+    NSforest.res$NSforest.binary_score[g, ct, 1] <- supp$binary_score[i]
+    NSforest.res$NSforest.cluster_median[g, ct, 1] <- supp$cluster_median[i]
+  }
+  return(NSforest.res)
+}
+
+
+
+
+
+
+
 
