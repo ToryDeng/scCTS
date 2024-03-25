@@ -2,37 +2,27 @@
 % Please edit documentation in R/baselines.R
 \name{runBaselineMethod}
 \alias{runBaselineMethod}
-\title{A wrapper function of the classic methods to find over-expressed DE genes}
+\title{A wrapper function of classic differential expression tests and feature
+selection methods.}
 \usage{
 runBaselineMethod(
   sce,
-  use.raw = FALSE,
   use.norm.rep = NULL,
-  normalize = FALSE,
-  log.input = FALSE,
-  log.base = 2,
   subject.rep = "subject",
   celltype.rep = "celltype",
   per.subject = TRUE,
-  method = c("wilcox", "twelch", "DEseq2", "NSforest"),
+  method = c("wilcox", "twelch", "DEseq2", "NSforest", "FEAST", "scGeneFit"),
+  celltype.ngenes = NULL,
   numCores = NULL,
   python.path = NULL
 )
 }
 \arguments{
-\item{sce}{A \code{SingleCellExperiment} object. Should contain normalized count matrix,
-subject and cell type info.}
-
-\item{use.raw}{Whether to use the raw count matrix, which is normalized internally.}
+\item{sce}{A \code{SingleCellExperiment} object. Should contain normalized
+count matrix, subject and cell type info.}
 
 \item{use.norm.rep}{Which count matrix should be used. Default is the matrix
 accessed by \code{normcounts()}.}
-
-\item{normalize}{Whether to normalize the raw counts. Only relevant when \code{use.raw=TRUE}.}
-
-\item{log.input}{Whether the input expression matrix is log-transformed.}
-
-\item{log.base}{The base of log-transformation.}
 
 \item{subject.rep}{Column name for the subject info.}
 
@@ -43,24 +33,62 @@ Otherwise perform DE analysis for all cells.}
 
 \item{method}{A string indicating which DE method to use.}
 
+\item{celltype.ngenes}{A named list. The names are cell types, and the values
+are number of features selected for that cell type.}
+
 \item{numCores}{Number of cores to use. Default is \code{NULL}.}
 
-\item{python.path}{The path to the python. Need to install \pkg{nsforest} in advance.}
+\item{python.path}{The path to the python. Need to install \pkg{nsforest} in
+advance.}
 }
 \value{
-A list of 3-dim arrays. Each array is corresponding to a stat. The first dim
-is for genes, the second dim is for cell types, and the last dim is for subjects.
+A list of 3-dim arrays. Each array is corresponding to a stat. The
+  first dim is for genes, the second dim is for cell types, and the last dim
+  is for subjects.
 }
 \description{
-A wrapper function of the classic methods to find over-expressed DE genes
+Currently, DE tests implemented are:
+1. Wilcoxon test
+2. t-test
+3. ZINB-WaVE + DESeq2
+These tests are aimed to find over-expressed DE genes.
+FS methods implemented are:
+1. NS-Forest
+2. FEAST
+3. scGeneFit
+For each cell type, these methods select a predefined number of markers.
 }
 \examples{
 # load the simulated data
 data(sim.sce)
 
+# normalize
+sim.sce <- scater::logNormCounts(sim.sce, log=FALSE)
+
 # run the Wilcoxon test per subject
-res <- runBaselineMethod(sim.sce, use.raw = TRUE, normalize=TRUE,
+res <- runBaselineMethod(sim.sce,
                          subject.rep='subject', celltype.rep='celltype',
                          per.subject=TRUE, method='wilcox', numCores=2)
 
+}
+\references{
+Risso, Davide, et al. "A general and flexible method for signal
+extraction from single-cell RNA-seq data." Nature communications 9.1 (2018):
+284.
+
+Love, Michael, Simon Anders, and Wolfgang Huber. "Differential
+analysis of count data–the DESeq2 package." Genome Biol 15.550 (2014):
+10-1186.
+
+Aevermann, Brian, et al. "A machine learning method for the
+discovery of minimum marker gene combinations for cell type identification
+from single-cell RNA sequencing." Genome research 31.10 (2021): 1767-1780.
+
+Su, Kenong, Tianwei Yu, and Hao Wu. "Accurate feature selection
+improves single-cell RNA-seq cell clustering." Briefings in bioinformatics
+22.5 (2021): bbab034.
+
+Dumitrascu, Bianca, et al. "Optimal marker gene selection for
+cell type discrimination in single cell analyses." Nature communications 12.1
+(2021): 1186.
 }

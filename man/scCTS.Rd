@@ -2,8 +2,8 @@
 % Please edit documentation in R/scCTS.R
 \name{scCTS}
 \alias{scCTS}
-\title{The main function of scCTS.
-It performs DE analysis on normalized (not log-normalized) count matrix.}
+\title{The main function of scCTS. It performs DE analysis on normalized (not
+log-normalized) count matrix.}
 \usage{
 scCTS(
   sce,
@@ -23,23 +23,27 @@ scCTS(
 )
 }
 \arguments{
-\item{sce}{A \code{SingleCellExperiment} object. Should contain normalized count matrix,
-subject and cell type info.}
+\item{sce}{A \code{SingleCellExperiment} object. Should contain normalized
+count matrix, subject and cell type info.}
 
-\item{use.raw}{Whether to use the raw counts. If \code{TRUE}, the raw counts are then normalized by \pkg{scCTS}.}
+\item{use.raw}{Whether to use the raw counts. If \code{TRUE}, the raw counts
+are then normalized by \pkg{scCTS}.}
 
 \item{use.norm.rep}{Which count matrix should be used. Default is the matrix
 accessed by \code{normcounts()}.}
 
-\item{subject.rep}{The name of column that stores subject labels of cells in \code{colData} slot.}
+\item{subject.rep}{The name of column that stores subject labels of cells in
+\code{colData} slot.}
 
-\item{celltype.rep}{The name of column that stores cell type labels in \code{colData} slot.}
+\item{celltype.rep}{The name of column that stores cell type labels in
+\code{colData} slot.}
 
 \item{log.input}{Whether the input expression matrix is log-transformed.}
 
 \item{log.base}{The base of log-transformation.}
 
-\item{effect_thres}{Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript)}
+\item{effect_thres}{Threshold for filtering genes with negative mean
+(\eqn{m_{gk}} in Eq 3 in manuscript)}
 
 \item{maxiter}{Maximum iteration number}
 
@@ -58,18 +62,19 @@ cores minus 1.}
 }
 \value{
 A list containing lists for every cell type. Each list contains
-posterior probability and estimates of parameters for a cell type.
+  posterior probability and estimates of parameters for a cell type.
 }
 \description{
-The main function of scCTS.
-It performs DE analysis on normalized (not log-normalized) count matrix.
+The main function of scCTS. It performs DE analysis on normalized (not
+log-normalized) count matrix.
 }
 \examples{
 # load the simulated data
 data(sim.sce)
 
 # run scCTS
-res <- scCTS(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype',
-numCores=2)
+res <- scCTS(sim.sce, use.raw = TRUE,
+             subject.rep='subject', celltype.rep='celltype',
+             numCores=2)
 
 }

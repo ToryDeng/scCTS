@@ -2,8 +2,8 @@
 % Please edit documentation in R/utils.R
 \name{normalize.raw.counts}
 \alias{normalize.raw.counts}
-\title{Normalize raw counts
-This function normalize (not log-normalize!) the raw counts using a target sum of 1e4.}
+\title{Normalize raw counts This function normalize (not log-normalize!) the raw
+counts using a target sum of 1e4.}
 \usage{
 normalize.raw.counts(X)
 }
@@ -14,6 +14,6 @@ normalize.raw.counts(X)
 a matrix containing the normalized counts.
 }
 \description{
-Normalize raw counts
-This function normalize (not log-normalize!) the raw counts using a target sum of 1e4.
+Normalize raw counts This function normalize (not log-normalize!) the raw
+counts using a target sum of 1e4.
 }

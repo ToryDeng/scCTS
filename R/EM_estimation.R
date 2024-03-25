@@ -1,4 +1,3 @@
-
 #' First-round EM for each gene
 #'
 #' just a case with two mixture normal distribution with same variance

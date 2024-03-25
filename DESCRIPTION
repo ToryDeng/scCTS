@@ -26,7 +26,6 @@ Imports:
     BiocParallel,
     cli,
     doParallel,
-    DESeq2,
     DelayedArray,
     data.table,
     foreach,
@@ -35,14 +34,20 @@ Imports:
     methods,
     Matrix,
     parallel,
-    reticulate,
     SummarizedExperiment,
     SingleCellExperiment,
     S4Vectors,
+    readr,
+    purrr,
+    dplyr,
     stringr,
-    zinbwave
 Suggests: 
     knitr,
     rmarkdown,
-    BiocStyle
+    BiocStyle,
+    scater,
+    zinbwave,
+    DESeq2,
+    reticulate,
+    FEAST,
 VignetteBuilder: knitr

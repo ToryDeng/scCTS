@@ -1,13 +1,14 @@
 
 
-#' Normalize raw counts
-#' This function normalize (not log-normalize!) the raw counts using a target sum of 1e4.
+#' Normalize raw counts This function normalize (not log-normalize!) the raw
+#' counts using a target sum of 1e4.
 #'
 #' @param X the raw count matrix (genes by cells).
 #'
 #' @return a matrix containing the normalized counts.
 #' @importFrom Matrix t colSums
-
+#' @importFrom cli cli_alert_info
+#'
 normalize.raw.counts <- function(X){
   cli_text("Normalizing the raw counts...")
   X <- t(t(X) / colSums(X)) * 1e4  # target sum is set to 1e4
@@ -37,11 +38,13 @@ create.res.list <- function(items, columns, rows){
 #' Get the expression matrix
 #'
 #' @param sce A SingleCellExperiment object
-#' @param use.raw Whether use raw counts data. Default is \code{FALSE}. If \code{normalize=FALSE}, the function
-#' returns the raw counts directly. If \code{normalize=TRUE}, the function returns the
-#' normcounts.
-#' @param use.norm.rep Which representation in \code{assayNames(sce)} will be used.
-#' @param normalize Whether normalize the data. Default is \code{FALSE}. Only valid when \code{use.raw=TRUE}.
+#' @param use.raw Whether use raw counts data. Default is \code{FALSE}. If
+#'   \code{normalize=FALSE}, the function returns the raw counts directly. If
+#'   \code{normalize=TRUE}, the function returns the normcounts.
+#' @param use.norm.rep Which representation in \code{assayNames(sce)} will be
+#'   used.
+#' @param normalize Whether normalize the data. Default is \code{FALSE}. Only
+#'   valid when \code{use.raw=TRUE}.
 #'
 #' @return A dense expression matrix (genes by cells).
 #'
@@ -57,9 +60,10 @@ get.expression.matrix <- function(
   stopifnot(all(is.logical(c(use.raw, normalize))))
   stopifnot(is.null(use.norm.rep) | is.character(use.norm.rep))
 
-  if (use.raw){
+  if (use.raw){  # retrieve the raw counts (and normalize them)
+    stopifnot(is.null(use.norm.rep))
     Y <- counts(sce)
-    cli_text("Using the raw counts")
+    cli_alert_info("Using the raw counts")
     if (normalize){
       Y <- normalize.raw.counts(Y)
     }
@@ -86,7 +90,7 @@ get.expression.matrix <- function(
 #' @return the raw count matrix (genes by cells).
 #'
 #' @importFrom cli cli_text
-
+#'
 inverse.log <- function(X, log.base=c('natural', 10, 2)){
   stopifnot(log.base %in% c('natural', 10, 2))
   cli_text("Reverting the logcounts (base: {.val {log.base}})...")
@@ -102,13 +106,13 @@ inverse.log <- function(X, log.base=c('natural', 10, 2)){
 
 #' Set parallel computation
 #'
-#' @param numCores the number of cores to use. Default is \code{NULL}, which means
-#' using all but one possible cores.
+#' @param numCores the number of cores to use. Default is \code{NULL}, which
+#'   means using all but one possible cores.
 #'
 #' @return the number of actually used cores.
 #' @import doParallel
 #' @importFrom parallel detectCores
-#' @importFrom cli cli_text
+#' @importFrom cli cli_alert_info
 
 set.parallel.computation <- function(numCores = NULL){
   stopifnot(is.null(numCores) | is.numeric(numCores))
@@ -117,7 +121,7 @@ set.parallel.computation <- function(numCores = NULL){
     numCores <- detectCores() - 1
   }
   registerDoParallel(numCores) # registered cores number for parallel computation
-  cli_text("Using {.val {numCores}} workers for computation.")
+  cli_alert_info("Using {.val {numCores}} workers for computation.")
   return(numCores)
 }
 
@@ -132,7 +136,9 @@ store.test.res <- function(test.res, sub.res, names.map, current.ct){
 
 
 
-
+check.raw.counts <- function(expr){
+  return(ifelse(all(as.matrix(expr) %% 1 == 0), TRUE, FALSE))
+}
 
 
 

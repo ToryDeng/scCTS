@@ -14,13 +14,15 @@ get.expression.matrix(
 \arguments{
 \item{sce}{A SingleCellExperiment object}
 
-\item{use.raw}{Whether use raw counts data. Default is \code{FALSE}. If \code{normalize=FALSE}, the function
-returns the raw counts directly. If \code{normalize=TRUE}, the function returns the
-normcounts.}
+\item{use.raw}{Whether use raw counts data. Default is \code{FALSE}. If
+\code{normalize=FALSE}, the function returns the raw counts directly. If
+\code{normalize=TRUE}, the function returns the normcounts.}
 
-\item{use.norm.rep}{Which representation in \code{assayNames(sce)} will be used.}
+\item{use.norm.rep}{Which representation in \code{assayNames(sce)} will be
+used.}
 
-\item{normalize}{Whether normalize the data. Default is \code{FALSE}. Only valid when \code{use.raw=TRUE}.}
+\item{normalize}{Whether normalize the data. Default is \code{FALSE}. Only
+valid when \code{use.raw=TRUE}.}
 }
 \value{
 A dense expression matrix (genes by cells).

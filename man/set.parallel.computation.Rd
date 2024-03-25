@@ -7,8 +7,8 @@
 set.parallel.computation(numCores = NULL)
 }
 \arguments{
-\item{numCores}{the number of cores to use. Default is \code{NULL}, which means
-using all but one possible cores.}
+\item{numCores}{the number of cores to use. Default is \code{NULL}, which
+means using all but one possible cores.}
 }
 \value{
 the number of actually used cores.

@@ -4,23 +4,28 @@
 \alias{BaselineMethod.NSforest}
 \title{NS-Forest}
 \usage{
-BaselineMethod.NSforest(expr, celltypes, python.path)
+BaselineMethod.NSforest(expr, celltypes, celltype.ngenes, python.path)
 }
 \arguments{
-\item{expr}{A gene by cell matrix storing the expression values. Should be log-normalized counts.}
+\item{expr}{A gene by cell matrix storing the expression values.}
 
-\item{celltypes}{A vector indicating cell types of each cell}
+\item{celltypes}{A vector indicating cell types of each cell.}
 
-\item{python.path}{The path to the python. Need to install \pkg{nsforest} in advance.}
+\item{celltype.ngenes}{A named list. The names are cell types, and the values
+are number of features selected for that cell type.}
+
+\item{python.path}{The path to the python. Need to install \pkg{nsforest} in
+advance.}
 }
 \value{
-A list of 3-dim arrays. Each array corresponds to a stat. The first dim
-is genes, the second dim is cell types, and the last dim is a single subject.
-\strong{Note}: the length of the first dim may not equal the total number of genes,
-since \emph{negative markers} defined in the \href{https://doi.org/10.1101/gr.275569.121}{paper}
-are filtered. Besides some values may be \code{NA}s due to the inconsistency between
-\emph{positive markers} of each cell type.
+A named list. Names are unique cell types. Values are selected
+  features for that cell type.
 }
 \description{
-NS-Forest
+Running this function will create a folder ./NSForest_outputs/ in the current
+working directory. For each cell type, the genes should be sorted first by
+binary scores and then by feature importances from the random forest model.
+The number of actually selected features may be less than the given number of
+selected features, since \emph{negative markers} defined in the
+\href{https://doi.org/10.1101/gr.275569.121}{paper} are filtered.
 }

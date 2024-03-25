@@ -1,29 +1,33 @@
-#' The main function of scCTS.
-#' It performs DE analysis on normalized (not log-normalized) count matrix.
+#' The main function of scCTS. It performs DE analysis on normalized (not
+#' log-normalized) count matrix.
 #'
-#' @param sce A \code{SingleCellExperiment} object. Should contain normalized count matrix,
-#' subject and cell type info.
-#' @param use.raw Whether to use the raw counts. If \code{TRUE}, the raw counts are then normalized by \pkg{scCTS}.
+#' @param sce A \code{SingleCellExperiment} object. Should contain normalized
+#'   count matrix, subject and cell type info.
+#' @param use.raw Whether to use the raw counts. If \code{TRUE}, the raw counts
+#'   are then normalized by \pkg{scCTS}.
 #' @param use.norm.rep Which count matrix should be used. Default is the matrix
-#' accessed by \code{normcounts()}.
-#' @param subject.rep The name of column that stores subject labels of cells in \code{colData} slot.
-#' @param celltype.rep The name of column that stores cell type labels in \code{colData} slot.
+#'   accessed by \code{normcounts()}.
+#' @param subject.rep The name of column that stores subject labels of cells in
+#'   \code{colData} slot.
+#' @param celltype.rep The name of column that stores cell type labels in
+#'   \code{colData} slot.
 #' @param log.input Whether the input expression matrix is log-transformed.
 #' @param log.base The base of log-transformation.
-#' @param effect_thres Threshold for filtering genes with negative mean (\eqn{m_{gk}} in Eq 3 in manuscript)
+#' @param effect_thres Threshold for filtering genes with negative mean
+#'   (\eqn{m_{gk}} in Eq 3 in manuscript)
 #' @param maxiter Maximum iteration number
 #' @param tol EM stop control
 #' @param numCores Number of cores for parallel computation.
 #' @param min.cutoff Remove samples with extreme small log fold change for
-#' robust estimation. Default is quantile 0.05.
+#'   robust estimation. Default is quantile 0.05.
 #' @param max.cutoff Remove samples with extreme large log fold change for
-#' robust estimation. Default is quantile 0.95.
+#'   robust estimation. Default is quantile 0.95.
 #' @param numCores Number of cores to use. Default is the number of all possible
-#' cores minus 1.
+#'   cores minus 1.
 #' @param verbose Whether to print details when the function is running.
 #'
 #' @return A list containing lists for every cell type. Each list contains
-#' posterior probability and estimates of parameters for a cell type.
+#'   posterior probability and estimates of parameters for a cell type.
 #' @import SingleCellExperiment cli
 #' @importFrom foreach %dopar% foreach
 #' @export
@@ -33,8 +37,9 @@
 #' data(sim.sce)
 #'
 #' # run scCTS
-#' res <- scCTS(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype',
-#' numCores=2)
+#' res <- scCTS(sim.sce, use.raw = TRUE,
+#'              subject.rep='subject', celltype.rep='celltype',
+#'              numCores=2)
 #'
 scCTS <- function(
     sce,

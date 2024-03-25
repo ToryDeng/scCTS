@@ -4,5 +4,6 @@
 ^Rlog\.txt$
 ^run\.sh$
 ^reproducibility$
+^comparison$
 ^doc$
 ^Meta$

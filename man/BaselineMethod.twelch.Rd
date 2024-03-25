@@ -4,7 +4,7 @@
 \alias{BaselineMethod.twelch}
 \title{t-test}
 \usage{
-BaselineMethod.twelch(expr, celltypes, nCores.used, log.input, log.base)
+BaselineMethod.twelch(expr, celltypes, nCores.used)
 }
 \arguments{
 \item{expr}{A gene by cell matrix storing the expression values}
@@ -12,14 +12,10 @@ BaselineMethod.twelch(expr, celltypes, nCores.used, log.input, log.base)
 \item{celltypes}{A vector indicating cell types of each cell}
 
 \item{nCores.used}{The number of cores actually used}
-
-\item{log.input}{Whether the input expression matrix is log-transformed.}
-
-\item{log.base}{The base of log-transformation.}
 }
 \value{
 A list of 3-dim arrays. Each array corresponds to a stat. The first dim
-is genes, the second dim is cell types, and the last dim is a single subject.
+  is genes, the second dim is cell types, and the last dim is a single subject.
 }
 \description{
 t-test
