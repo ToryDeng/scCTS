@@ -24,22 +24,21 @@ Here we give a simple example to demonstrate how to run `scCTS`. Once the packag
 data(sim.sce)
 ```
 
-`sim.sce` is a `SingleCellExperiment` object with 2,000 genes and 10,000 cells.
+`sim.sce` is a `SingleCellExperiment` object with 200 genes and 10,000 cells.
 Next, you can run `scCTS` with a single line of code:
 
 ```R
-res <- scCTS(sim.sce, use.raw = TRUE, subject.rep='subject', celltype.rep='celltype', numCores=2)
+res <- scCTS(sim.sce, subject.rep='subject', celltype.rep='celltype', numCores=2)
 ```
 
 Some explanations about the parameters:
-- **use.raw:** Specifies whether to use the raw counts. If set to `TRUE`, the raw counts will be normalized by `scCTS`.
+
 - **subject.rep:** The name of the column that stores subject labels of cells in the `colData` slot.
 - **celltype.rep:** The name of the column that stores cell type labels in the `colData` slot.
 - **numCores:** Number of cores for parallel computation.
 
 
-In the [tested environment](#tested-environment), the code finishes running within a minute. The return value `res` is a list containing lists for each cell type. Each list contains
-posterior probabilities of genes and parameter estimations for a particular cell type. For example, you can extract the posterior probabilities of genes to show DE in `celltype1` using the following code:
+In the [tested environment](#tested-environment), the code finishes running within a minute. The return value `res` is a list containing lists for each cell type. Each list contains posterior probabilities of genes and parameter estimations for a particular cell type. For example, you can extract the posterior probabilities of genes to show DE in `celltype1` using the following code:
 
 ```R
 res$celltype1$pp.d1

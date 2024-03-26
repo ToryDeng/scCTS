@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 reproducibility/*
+comparison/*
 !reproducibility/data_preprocessing/*
 !reproducibility/basic_visualization/basic_visualization.html
 !reproducibility/batch_correction/batch_correction.html
@@ -10,3 +11,4 @@ reproducibility/*
 !reproducibility/enrichment_analysis/*.html
 inst/doc
 /Meta/
+

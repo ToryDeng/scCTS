@@ -3,14 +3,18 @@
 #' selection methods.
 #'
 #' Currently, DE tests implemented are:
-#' 1. Wilcoxon test
-#' 2. t-test
-#' 3. ZINB-WaVE + DESeq2
-#' These tests are aimed to find over-expressed DE genes.
+#' \enumerate{
+#'   \item Wilcoxon test
+#'   \item t-test
+#'   \item ZINB-WaVE + DESeq2
+#' }
+#' These tests are aimed to find over-expressed DE genes.\cr
 #' FS methods implemented are:
-#' 1. NS-Forest
-#' 2. FEAST
-#' 3. scGeneFit
+#' \enumerate{
+#'   \item NS-Forest
+#'   \item FEAST
+#'   \item scGeneFit
+#' }
 #' For each cell type, these methods select a predefined number of markers.
 #'
 #' @param sce A \code{SingleCellExperiment} object. Should contain normalized
@@ -83,10 +87,10 @@ runBaselineMethod <- function(
 
   # check python path
   if (method %in% baselines.python() & is.null(python.path)){
-    cli_abort("{.var method} requires a python path.")
+    cli_abort("{.var {method}} requires a python path.")
   }
   if (!(method %in% baselines.python()) & !is.null(python.path)){
-    cli_alert_warning("Invalid argument python.path={.var python.path} for {.var method}.")
+    cli_alert_warning("Invalid argument python.path={.file {python.path}} for {.var {method}}.")
   }
   # get (normalized) count matrix
   if (method %in% baselines.counts()){
@@ -99,19 +103,19 @@ runBaselineMethod <- function(
   # check the list of numbers of selected markers for each cell type
   if (method %in% baselines.fixnumber()){
     if (is.null(celltype.ngenes)){
-      cli_abort("{.var method} requires predefined numbers of markers for each cell type.")
+      cli_abort("{.var {method}} requires predefined numbers of markers for each cell type.")
     }
     isin.celltypes <- names(celltype.ngenes) %in% celltypes
     if (!all(isin.celltypes)){
       invalid.cts <- names(celltype.ngenes)[!isin.celltypes]
-      cli_abort("Invalid number(s) of features to be selected: {.var invalid.cts}")
+      cli_abort("Invalid number(s) of features to be selected: {.var {invalid.cts}}")
     }
     if (!is.integer(unlist(celltype.ngenes, use.names=FALSE))){
-      cli_abort("Invalid number(s) of features to be selected: {.var celltype.ngenes}")
+      cli_abort("Invalid number(s) of features to be selected: {.var {celltype.ngenes}}")
     }
   }
   if (!(method %in% baselines.fixnumber()) & !is.null(celltype.ngenes)){
-    cli_alert_warning("Invalid argument celltype.ngenes={.var celltype.ngenes} for {.var method}.")
+    cli_alert_warning("Invalid argument celltype.ngenes={.var {celltype.ngenes}} for {.var {method}}.")
   }
 
 
@@ -134,19 +138,28 @@ runBaselineMethod <- function(
         "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used),
         "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, celltype.ngenes, python.path),
         "FEAST" = BaselineMethod.FEAST(sub.Y, sub.cts, celltype.ngenes, numCores.used),
-        "scGeneFit" = BaselineMethod.scGeneFit(sub.Y, sub.cts, celltype.ngenes, numCores.used),
+        "scGeneFit" = BaselineMethod.scGeneFit(sub.Y, sub.cts, celltype.ngenes, python.path),
         stop(str_glue("No method matched for {method}"))
       )
-      # set the name of the last dim of each array as subject name, and then store
-      sub.res.list[[sub]] <- lapply(sub.result, function(arr){dimnames(arr)[3] <- sub;arr})
+      if (!(method %in% baselines.fixnumber())){
+        # for DE tests, set the name of the last dim of each array as subject
+        # name, and then store
+        sub.res.list[[sub]] <- lapply(sub.result, function(arr){dimnames(arr)[3] <- sub;arr})
+      }else{
+        sub.res.list[[sub]] <- sub.result
+      }
       cli_progress_update()
     }
-    # combine results for multiple subjects
-    DE.res <- list()
-    for (name in names(sub.res.list[[1]])){
-      DE.res[[name]] <- abind(lapply(sub.res.list, function(lst) lst[[name]]))
+    if (!(method %in% baselines.fixnumber())){
+      # combine results for multiple subjects
+      DE.res <- list()
+      for (name in names(sub.res.list[[1]])){
+        DE.res[[name]] <- abind(lapply(sub.res.list, function(lst) lst[[name]]))
+      }
+      return(DE.res)
+    }else{
+      return(sub.res.list)
     }
-    return(DE.res)
   }else{
     cli_h1("Population-level {.emph {method}} method")
     cli_text("{.emph Note: this mode needs batch-effects correction in advance.}")
@@ -158,10 +171,12 @@ runBaselineMethod <- function(
       "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, numCores.used),
       "NSforest" = BaselineMethod.NSforest(Y, celltypes, celltype.ngenes, python.path),
       "FEAST" = BaselineMethod.FEAST(Y, celltypes, celltype.ngenes, numCores.used),
-      "scGeneFit" = BaselineMethod.scGeneFit(Y, celltypes, celltype.ngenes, numCores.used),
+      "scGeneFit" = BaselineMethod.scGeneFit(Y, celltypes, celltype.ngenes, python.path),
       stop(str_glue("No method matched for {method}"))
     )
-    all.result <- lapply(all.result, function(arr){dimnames(arr)[3] <- "all";arr})
+    if (!(method %in% baselines.fixnumber())){
+      all.result <- lapply(all.result, function(arr){dimnames(arr)[3] <- "all";arr})
+    }
     return(all.result)
   }
 }
@@ -297,7 +312,7 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
   for (pkg in c("zinbwave", "DESeq2")){
     if(!requireNamespace(pkg)){
-      cli_abort("This function requires the {.var pkg} package.")
+      cli_abort("This function requires the {.pkg {pkg}} package.")
     }
   }
   stopifnot(all(expr %% 1 == 0))
@@ -371,23 +386,24 @@ BaselineMethod.NSforest <- function(expr, celltypes, celltype.ngenes, python.pat
   # import python packages
   pkg <- "reticulate"
   if(!requireNamespace(pkg)){
-    cli_abort("This function requires the {.var pkg} package.")
+    cli_abort("This function requires the {.pkg {pkg}} package.")
   }
   reticulate::use_python(python.path)
   nsforest <- reticulate::import("nsforest")
   ad <- reticulate::import("anndata")
 
   ucelltypes <- unique(celltypes)
-  X <- reticulate::r_to_py(t(expr))
-  obs <- reticulate::r_to_py(data.frame(celltype = celltypes))
+  X <- reticulate::r_to_py(t(as.data.frame(expr)))
+  obs <- reticulate::r_to_py(data.frame(celltype=celltypes, row.names=colnames(expr)))
   # create the anndata object
   adata <- ad$AnnData(X=X, obs=obs)
   adata$var_names <- reticulate::r_to_py(rownames(expr))
   # run NSForest for all cell types
   # the detailed results are saved in ./NSForest_outputs/NSForest_supplementary.csv
-  nsforest$NSForest(adata, cluster_header='celltype',
-                    n_top_genes=adata$n_vars, n_binary_genes=adata$n_vars)
-  supp <- read_csv("./NSForest_outputs/NSForest_supplementary.csv")
+  reticulate::py_capture_output(nsforest$NSForest(
+    adata, cluster_header='celltype', n_top_genes=adata$n_vars, n_binary_genes=adata$n_vars
+  ))
+  supp <- read_csv("./NSForest_outputs/NSForest_supplementary.csv", show_col_types=FALSE)
 
   process_cluster <- function(cluster_name, size, data) {
     filtered_data <- data %>%
@@ -417,18 +433,23 @@ BaselineMethod.NSforest <- function(expr, celltypes, celltype.ngenes, python.pat
 #'
 #' @return A list of each cell type's highly variable genes. The number of HVGs
 #'   are equal to the given number.
+#' @importFrom purrr quietly
 #'
 BaselineMethod.FEAST <- function(expr, celltypes, celltype.ngenes, nCores.used){
   pkg <- "FEAST"
   if(!requireNamespace(pkg)){
-    cli_abort("This function requires the {.var pkg} package.")
+    cli_abort("This function requires the {.pkg {pkg}} package.")
   }
   unique.celltypes <- sort(unique(celltypes))
   FEAST.res <- list()
   for(ucelltype in unique.celltypes){
-    ngenes <- celltype.ngenes[ucelltype]
-    idxs <- FEAST::FEAST_fast(expr[,celltypes == ucelltype], nProc=nCores.used)
-    FEAST.res[[ucelltype]] <- rownames(expr)[idxs[1:ngenes]]
+    ngenes <- celltype.ngenes[[ucelltype]]
+    tryCatch({
+      idxs <- quietly(FEAST::FEAST_fast)(
+        expr[,celltypes == ucelltype], nProc=nCores.used
+      )$result  # quietly returns a list of all messages and original return values
+      FEAST.res[[ucelltype]] <- rownames(expr)[idxs[1:ngenes]]
+    }, error=function(e){print(e);cli_alert_warning("Error occured when processing {.var {ucelltype}}, continue...")})
   }
   return(FEAST.res)
 }
@@ -446,12 +467,11 @@ BaselineMethod.FEAST <- function(expr, celltypes, celltype.ngenes, nCores.used){
 #' @return A named list. Names are unique cell types. Values are selected
 #'   features for that cell type.
 #'
-#'
 BaselineMethod.scGeneFit <- function(expr, celltypes, celltype.ngenes, python.path){
   # import python packages
   pkg <- "reticulate"
   if(!requireNamespace(pkg)){
-    cli_abort("This function requires the {.var pkg} package.")
+    cli_abort("This function requires the {.pkg {pkg}} package.")
   }
   reticulate::use_python(python.path)
   scGeneFit <- reticulate::import("scGeneFit")
@@ -459,11 +479,13 @@ BaselineMethod.scGeneFit <- function(expr, celltypes, celltype.ngenes, python.pa
   unique.celltypes <- sort(unique(celltypes))
   scGeneFit.res <- list()
   for(ucelltype in unique.celltypes){
-    ngenes <- celltype.ngenes[ucelltype]
+    ngenes <- celltype.ngenes[[ucelltype]]
     X <- reticulate::r_to_py(t(expr))
     cell.labels <- reticulate::r_to_py(ifelse(celltypes == ucelltype, ucelltype, "others"))
-    # + 1 since python starts from 1
-    idxs <- scGeneFit$functions$get_markers(X, cell.labels, num_markers=ngenes) + 1
+    # + 1 since in python indices start from 0
+    reticulate::py_capture_output(
+      idxs <- scGeneFit$functions$get_markers(X, cell.labels, num_markers=ngenes) + 1
+    )
     scGeneFit.res[[ucelltype]] <- rownames(expr)[idxs]
   }
 }

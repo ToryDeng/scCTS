@@ -48,14 +48,18 @@ A list of 3-dim arrays. Each array is corresponding to a stat. The
 }
 \description{
 Currently, DE tests implemented are:
-1. Wilcoxon test
-2. t-test
-3. ZINB-WaVE + DESeq2
-These tests are aimed to find over-expressed DE genes.
+\enumerate{
+  \item Wilcoxon test
+  \item t-test
+  \item ZINB-WaVE + DESeq2
+}
+These tests are aimed to find over-expressed DE genes.\cr
 FS methods implemented are:
-1. NS-Forest
-2. FEAST
-3. scGeneFit
+\enumerate{
+  \item NS-Forest
+  \item FEAST
+  \item scGeneFit
+}
 For each cell type, these methods select a predefined number of markers.
 }
 \examples{
