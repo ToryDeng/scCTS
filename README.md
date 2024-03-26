@@ -38,7 +38,7 @@ Some explanations about the parameters:
 - **numCores:** Number of cores for parallel computation.
 
 
-In the [tested environment](#tested-environment), the code finishes running within a minute. The return value `res` is a list containing lists for each cell type. Each list contains posterior probabilities of genes and parameter estimations for a particular cell type. For example, you can extract the posterior probabilities of genes to show DE in `celltype1` using the following code:
+In the [tested environment](#tested-environment), the code finishes running within 10 seconds. The return value `res` is a list containing lists for each cell type. Each list contains posterior probabilities of genes and parameter estimations for a particular cell type. For example, you can extract the posterior probabilities of genes to show DE in `celltype1` using the following code:
 
 ```R
 res$celltype1$pp.d1
@@ -51,7 +51,7 @@ For more details about how to run `scCTS` and classic DE methods, please refer t
 If you want to reproduce results shown in the paper, please refer to the directory [reproducibility/](reproducibility/) in this repo.
 
 
-## Tested environment
+## Tested environments
 ### Environment 1
 - CPU: AMD Ryzen Threadripper 3990X 64-Core Processor
 - Memory: 256GB
