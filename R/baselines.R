@@ -311,7 +311,7 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 #'   subject.
 #' @importFrom BiocParallel MulticoreParam
 #' @importFrom S4Vectors SimpleList
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @import SingleCellExperiment
 #'
 BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
   for (pkg in c("zinbwave", "DESeq2")){
@@ -319,7 +319,6 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
       cli_abort("This function requires the {.pkg {pkg}} package.")
     }
   }
-  stopifnot(all(expr %% 1 == 0))
   BPPARAM <- MulticoreParam(nCores.used)
 
   ucelltypes <- unique(celltypes)
@@ -333,23 +332,22 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
                      'DESeq2.fdr_info' = array.tmp,
                      'DESeq2.log2FC_info' = array.tmp)
 
-  # build a SummarizedExperiment
-  core <- SummarizedExperiment(assays=SimpleList(counts=as.matrix(expr)),
-                               colData=data.frame(celltype = as.factor(cleaned.celltypes)))
-  # ZINB-WaVE
-  core_zinb <- zinbwave::zinbwave(
-    core, K = 2, epsilon=1000, observationalWeights = TRUE, BPPARAM=BPPARAM
-  )
+  # build a SingleCellExperiment object
+  core <- SingleCellExperiment(assays=list(counts=expr),
+                               colData=data.frame(celltype = factor(cleaned.celltypes)))
+  # ZINB-WaVE, specify K = 0 to only compute observational weights
+  zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
+  mode(assay(zinb)) <- "integer"  # to prevent "converting counts to integer mode"
   # DESeq2
-  cli_progress_bar("Analyzing each celltype", total = length(cleaned.ucelltypes), type = "tasks")
   for (cleaned.uct in cleaned.ucelltypes){
     # build two groups
     is.current.celltype <- (cleaned.celltypes == cleaned.uct)
     colData(core_zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
 
-    dds <- DESeq2::DESeqDataSet(core_zinb, design = ~ group)
+    dds <- DESeq2::DESeqDataSet(zinb, design = ~ group)
     dds <- DESeq2::DESeq(
-      dds, sfType="poscounts", useT=TRUE, minmu=1e-6, parallel=T, BPPARAM=BPPARAM, quiet=TRUE
+      dds, sfType="poscounts", useT=TRUE, minmu=1e-6, minRep=Inf, fitType='local',
+      parallel=T, BPPARAM=BPPARAM, quiet=TRUE
     )
     ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
                               alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
@@ -360,9 +358,6 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
     DESeq2.res$DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
     DESeq2.res$DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
     DESeq2.res$DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
-
-    # update celltype progress bar
-    cli_progress_update()
   }
   return(DESeq2.res)
 }
