@@ -2,8 +2,8 @@
 % Please edit documentation in R/baselines.R
 \name{runBaselineMethod}
 \alias{runBaselineMethod}
-\title{A wrapper function of classic differential expression tests and feature
-selection methods.}
+\title{A wrapper function of classic differential expression tests and
+feature/marker selection methods.}
 \usage{
 runBaselineMethod(
   sce,
@@ -28,39 +28,48 @@ accessed by \code{normcounts()}.}
 
 \item{celltype.rep}{Column name for the cell type info.}
 
-\item{per.subject}{If \code{TRUE}, perform DE analysis for each sample.
-Otherwise perform DE analysis for all cells.}
+\item{per.subject}{If \code{TRUE}, calculate for each sample. Otherwise
+ignore the subject labels and calculate for all subjects.}
 
 \item{method}{A string indicating which DE method to use.}
 
 \item{celltype.ngenes}{A named list. The names are cell types, and the values
-are number of features selected for that cell type.}
+are number of genes to be selected for that cell type.}
 
-\item{numCores}{Number of cores to use. Default is \code{NULL}.}
+\item{numCores}{Number of cores to use. Default is \code{NULL}, which means
+using all but one of the CPU cores.}
 
-\item{python.path}{The path to the python. Need to install \pkg{nsforest} in
-advance.}
+\item{python.path}{The path to the python.}
 }
 \value{
-A list of 3-dim arrays. Each array is corresponding to a stat. The
-  first dim is for genes, the second dim is for cell types, and the last dim
-  is for subjects.
+\itemize{ \item For DE tests, if \code{per.subject=TRUE}, a list of
+  3-dim arrays. Each array is corresponding to a type of information (e.g.,
+  P-values). The first dim is corresponding to genes, the second dim is
+  corresponding to cell types, and the last dim is corresponding to subjects.
+  If \code{per.subject=FALSE}, the last dim has a size of 1 and a name "all".
+  \item For feature/marker selection methods, if \code{per.subject=TRUE}, a
+  list of sublists. Each sublist contains cell-type-specific selection
+  results of each subject. If \code{per.subject=FALSE}, a list of
+  cell-type-specific selection results regarding all subjects as a whole. }
 }
 \description{
-Currently, DE tests implemented are:
+Currently, differential expression (DE) tests implemented are:
 \enumerate{
   \item Wilcoxon test
   \item t-test
   \item ZINB-WaVE + DESeq2
 }
-These tests are aimed to find over-expressed DE genes.\cr
-FS methods implemented are:
+These tests are aimed to find over-expressed DE genes.\cr Feature/marker
+selection methods implemented are:
 \enumerate{
   \item NS-Forest
   \item FEAST
   \item scGeneFit
 }
 For each cell type, these methods select a predefined number of markers.
+NS-Forest and scGeneFit are python packages. You need to install them through
+\code{pip install nsforest scGeneFit} and provide the python path before you
+call the function.
 }
 \examples{
 # load the simulated data
@@ -77,22 +86,22 @@ res <- runBaselineMethod(sim.sce,
 }
 \references{
 Risso, Davide, et al. "A general and flexible method for signal
-extraction from single-cell RNA-seq data." Nature communications 9.1 (2018):
-284.
+  extraction from single-cell RNA-seq data." Nature communications 9.1
+  (2018): 284.
 
 Love, Michael, Simon Anders, and Wolfgang Huber. "Differential
-analysis of count data–the DESeq2 package." Genome Biol 15.550 (2014):
-10-1186.
+  analysis of count data–the DESeq2 package." Genome Biol 15.550 (2014):
+  10-1186.
 
 Aevermann, Brian, et al. "A machine learning method for the
-discovery of minimum marker gene combinations for cell type identification
-from single-cell RNA sequencing." Genome research 31.10 (2021): 1767-1780.
+  discovery of minimum marker gene combinations for cell type identification
+  from single-cell RNA sequencing." Genome research 31.10 (2021): 1767-1780.
 
 Su, Kenong, Tianwei Yu, and Hao Wu. "Accurate feature selection
-improves single-cell RNA-seq cell clustering." Briefings in bioinformatics
-22.5 (2021): bbab034.
+  improves single-cell RNA-seq cell clustering." Briefings in bioinformatics
+  22.5 (2021): bbab034.
 
 Dumitrascu, Bianca, et al. "Optimal marker gene selection for
-cell type discrimination in single cell analyses." Nature communications 12.1
-(2021): 1186.
+  cell type discrimination in single cell analyses." Nature communications
+  12.1 (2021): 1186.
 }

@@ -7,12 +7,11 @@
 BaselineMethod.FEAST(expr, celltypes, celltype.ngenes, nCores.used)
 }
 \arguments{
-\item{expr}{A gene by cell matrix storing the expression values. Should be
-raw counts.}
+\item{expr}{A gene by cell matrix storing the expression values}
 
-\item{celltypes}{A vector indicating cell types of each cell.}
+\item{celltypes}{A vector indicating cell types of each cell}
 
-\item{celltype.ngenes}{A named list. The names are cell types, and the values
+\item{celltype.ngenes}{A named list. Names are cell types, and the values
 are number of features selected for that cell type.}
 
 \item{nCores.used}{The number of cores actually used}

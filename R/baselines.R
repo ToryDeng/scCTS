@@ -1,21 +1,24 @@
 
-#' A wrapper function of classic differential expression tests and feature
-#' selection methods.
+#' A wrapper function of classic differential expression tests and
+#' feature/marker selection methods.
 #'
-#' Currently, DE tests implemented are:
+#' Currently, differential expression (DE) tests implemented are:
 #' \enumerate{
 #'   \item Wilcoxon test
 #'   \item t-test
 #'   \item ZINB-WaVE + DESeq2
 #' }
-#' These tests are aimed to find over-expressed DE genes.\cr
-#' FS methods implemented are:
+#' These tests are aimed to find over-expressed DE genes.\cr Feature/marker
+#' selection methods implemented are:
 #' \enumerate{
 #'   \item NS-Forest
 #'   \item FEAST
 #'   \item scGeneFit
 #' }
 #' For each cell type, these methods select a predefined number of markers.
+#' NS-Forest and scGeneFit are python packages. You need to install them through
+#' \code{pip install nsforest scGeneFit} and provide the python path before you
+#' call the function.
 #'
 #' @param sce A \code{SingleCellExperiment} object. Should contain normalized
 #'   count matrix, subject and cell type info.
@@ -23,18 +26,24 @@
 #'   accessed by \code{normcounts()}.
 #' @param subject.rep Column name for the subject info.
 #' @param celltype.rep Column name for the cell type info.
-#' @param per.subject If \code{TRUE}, perform DE analysis for each sample.
-#'   Otherwise perform DE analysis for all cells.
+#' @param per.subject If \code{TRUE}, calculate for each sample. Otherwise
+#'   ignore the subject labels and calculate for all subjects.
 #' @param method  A string indicating which DE method to use.
 #' @param celltype.ngenes A named list. The names are cell types, and the values
-#'   are number of features selected for that cell type.
-#' @param numCores Number of cores to use. Default is \code{NULL}.
-#' @param python.path The path to the python. Need to install \pkg{nsforest} in
-#'   advance.
+#'   are number of genes to be selected for that cell type.
+#' @param numCores Number of cores to use. Default is \code{NULL}, which means
+#'   using all but one of the CPU cores.
+#' @param python.path The path to the python.
 #'
-#' @return A list of 3-dim arrays. Each array is corresponding to a stat. The
-#'   first dim is for genes, the second dim is for cell types, and the last dim
-#'   is for subjects.
+#' @return \itemize{ \item For DE tests, if \code{per.subject=TRUE}, a list of
+#'   3-dim arrays. Each array is corresponding to a type of information (e.g.,
+#'   P-values). The first dim is corresponding to genes, the second dim is
+#'   corresponding to cell types, and the last dim is corresponding to subjects.
+#'   If \code{per.subject=FALSE}, the last dim has a size of 1 and a name "all".
+#'   \item For feature/marker selection methods, if \code{per.subject=TRUE}, a
+#'   list of sublists. Each sublist contains cell-type-specific selection
+#'   results of each subject. If \code{per.subject=FALSE}, a list of
+#'   cell-type-specific selection results regarding all subjects as a whole. }
 #' @import SingleCellExperiment
 #' @importFrom abind abind
 #' @importFrom stringr str_glue
@@ -53,20 +62,20 @@
 #'                          per.subject=TRUE, method='wilcox', numCores=2)
 #'
 #' @references Risso, Davide, et al. "A general and flexible method for signal
-#' extraction from single-cell RNA-seq data." Nature communications 9.1 (2018):
-#' 284.
+#'   extraction from single-cell RNA-seq data." Nature communications 9.1
+#'   (2018): 284.
 #' @references Love, Michael, Simon Anders, and Wolfgang Huber. "Differential
-#' analysis of count data–the DESeq2 package." Genome Biol 15.550 (2014):
-#' 10-1186.
+#'   analysis of count data–the DESeq2 package." Genome Biol 15.550 (2014):
+#'   10-1186.
 #' @references Aevermann, Brian, et al. "A machine learning method for the
-#' discovery of minimum marker gene combinations for cell type identification
-#' from single-cell RNA sequencing." Genome research 31.10 (2021): 1767-1780.
+#'   discovery of minimum marker gene combinations for cell type identification
+#'   from single-cell RNA sequencing." Genome research 31.10 (2021): 1767-1780.
 #' @references Su, Kenong, Tianwei Yu, and Hao Wu. "Accurate feature selection
-#' improves single-cell RNA-seq cell clustering." Briefings in bioinformatics
-#' 22.5 (2021): bbab034.
+#'   improves single-cell RNA-seq cell clustering." Briefings in bioinformatics
+#'   22.5 (2021): bbab034.
 #' @references Dumitrascu, Bianca, et al. "Optimal marker gene selection for
-#' cell type discrimination in single cell analyses." Nature communications 12.1
-#' (2021): 1186.
+#'   cell type discrimination in single cell analyses." Nature communications
+#'   12.1 (2021): 1186.
 #'
 runBaselineMethod <- function(
     sce,
@@ -194,7 +203,7 @@ baselines.fixnumber <- function(){
 
 # returns methods that require raw counts as inputs
 baselines.counts <- function(){
-  return(c("DEseq2"))
+  return(c("DEseq2", "FEAST"))
 }
 
 
@@ -206,7 +215,7 @@ baselines.counts <- function(){
 #' @param nCores.used The number of cores actually used
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first dim
-#'   is genes, the second dim is cell types, and the last dim is a single subject.
+#'   is genes, the second dim is cell types, and the last dim is subjects.
 #' @importFrom matrixTests row_wilcoxon_twosample
 #' @importFrom foreach %dopar% foreach
 #' @importFrom data.table rbindlist
@@ -248,12 +257,10 @@ BaselineMethod.wilcox <- function(expr, celltypes, nCores.used){
 
 #' t-test
 #'
-#' @param expr A gene by cell matrix storing the expression values
-#' @param celltypes A vector indicating cell types of each cell
-#' @param nCores.used The number of cores actually used
+#' @inheritParams BaselineMethod.wilcox
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first dim
-#'   is genes, the second dim is cell types, and the last dim is a single subject.
+#'   is genes, the second dim is cell types, and the last dim is subjects.
 #' @importFrom matrixTests row_t_welch
 #' @importFrom foreach %dopar% foreach
 #' @importFrom data.table rbindlist
@@ -297,10 +304,7 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 
 #' ZINB-WaVE + DESeq2
 #'
-#' @param expr A gene by cell matrix storing the expression values. Should be
-#'   raw counts.
-#' @param celltypes A vector indicating cell types of each cell
-#' @param nCores.used The number of cores actually used
+#' @inheritParams BaselineMethod.wilcox
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first
 #'   dim is genes, the second dim is cell types, and the last dim is a single
@@ -333,15 +337,20 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
   core <- SummarizedExperiment(assays=SimpleList(counts=as.matrix(expr)),
                                colData=data.frame(celltype = as.factor(cleaned.celltypes)))
   # ZINB-WaVE
-  core_zinb <- zinbwave::zinbwave(core, K = 2, epsilon=1000, observationalWeights = TRUE, BPPARAM=BPPARAM)
+  core_zinb <- zinbwave::zinbwave(
+    core, K = 2, epsilon=1000, observationalWeights = TRUE, BPPARAM=BPPARAM
+  )
   # DESeq2
+  cli_progress_bar("Analyzing each celltype", total = length(cleaned.ucelltypes), type = "tasks")
   for (cleaned.uct in cleaned.ucelltypes){
     # build two groups
     is.current.celltype <- (cleaned.celltypes == cleaned.uct)
     colData(core_zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
 
     dds <- DESeq2::DESeqDataSet(core_zinb, design = ~ group)
-    dds <- DESeq2::DESeq(dds, sfType="poscounts", useT=TRUE, minmu=1e-6, parallel=T, BPPARAM=BPPARAM)
+    dds <- DESeq2::DESeq(
+      dds, sfType="poscounts", useT=TRUE, minmu=1e-6, parallel=T, BPPARAM=BPPARAM, quiet=TRUE
+    )
     ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
                               alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
                               parallel=T, BPPARAM=BPPARAM)
@@ -351,6 +360,9 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
     DESeq2.res$DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
     DESeq2.res$DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
     DESeq2.res$DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
+
+    # update celltype progress bar
+    cli_progress_update()
   }
   return(DESeq2.res)
 }
@@ -368,12 +380,10 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
 #' selected features, since \emph{negative markers} defined in the
 #' \href{https://doi.org/10.1101/gr.275569.121}{paper} are filtered.
 #'
-#' @param expr A gene by cell matrix storing the expression values.
-#' @param celltypes A vector indicating cell types of each cell.
+#' @inheritParams BaselineMethod.wilcox
 #' @param celltype.ngenes A named list. The names are cell types, and the values
 #'   are number of features selected for that cell type.
-#' @param python.path The path to the python. Need to install \pkg{nsforest} in
-#'   advance.
+#' @param python.path The path to the python.
 #'
 #' @return A named list. Names are unique cell types. Values are selected
 #'   features for that cell type.
@@ -424,12 +434,9 @@ BaselineMethod.NSforest <- function(expr, celltypes, celltype.ngenes, python.pat
 
 #' FEAST
 #'
-#' @param expr A gene by cell matrix storing the expression values. Should be
-#'   raw counts.
-#' @param celltypes A vector indicating cell types of each cell.
-#' @param celltype.ngenes A named list. The names are cell types, and the values
+#' @inheritParams BaselineMethod.wilcox
+#' @param celltype.ngenes A named list. Names are cell types, and the values
 #'   are number of features selected for that cell type.
-#' @param nCores.used The number of cores actually used
 #'
 #' @return A list of each cell type's highly variable genes. The number of HVGs
 #'   are equal to the given number.
@@ -457,13 +464,7 @@ BaselineMethod.FEAST <- function(expr, celltypes, celltype.ngenes, nCores.used){
 
 #' scGeneFit
 #'
-#' @param expr A gene by cell matrix storing the expression values.
-#' @param celltypes A vector indicating cell types of each cell.
-#' @param celltype.ngenes A named list. The names are cell types, and the values
-#'   are number of features selected for that cell type.
-#' @param python.path The path to the python. Need to install \pkg{scGeneFit} in
-#'   advance.
-#'
+#' @inheritParams BaselineMethod.NSforest
 #' @return A named list. Names are unique cell types. Values are selected
 #'   features for that cell type.
 #'
@@ -488,5 +489,6 @@ BaselineMethod.scGeneFit <- function(expr, celltypes, celltype.ngenes, python.pa
     )
     scGeneFit.res[[ucelltype]] <- rownames(expr)[idxs]
   }
+  return(scGeneFit.res)
 }
 

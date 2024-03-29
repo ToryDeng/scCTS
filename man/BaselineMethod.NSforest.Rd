@@ -7,15 +7,14 @@
 BaselineMethod.NSforest(expr, celltypes, celltype.ngenes, python.path)
 }
 \arguments{
-\item{expr}{A gene by cell matrix storing the expression values.}
+\item{expr}{A gene by cell matrix storing the expression values}
 
-\item{celltypes}{A vector indicating cell types of each cell.}
+\item{celltypes}{A vector indicating cell types of each cell}
 
 \item{celltype.ngenes}{A named list. The names are cell types, and the values
 are number of features selected for that cell type.}
 
-\item{python.path}{The path to the python. Need to install \pkg{nsforest} in
-advance.}
+\item{python.path}{The path to the python.}
 }
 \value{
 A named list. Names are unique cell types. Values are selected

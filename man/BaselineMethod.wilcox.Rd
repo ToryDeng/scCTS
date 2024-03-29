@@ -15,7 +15,7 @@ BaselineMethod.wilcox(expr, celltypes, nCores.used)
 }
 \value{
 A list of 3-dim arrays. Each array corresponds to a stat. The first dim
-  is genes, the second dim is cell types, and the last dim is a single subject.
+  is genes, the second dim is cell types, and the last dim is subjects.
 }
 \description{
 Naive Wilcoxon test

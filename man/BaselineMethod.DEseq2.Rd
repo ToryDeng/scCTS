@@ -7,8 +7,7 @@
 BaselineMethod.DEseq2(expr, celltypes, nCores.used)
 }
 \arguments{
-\item{expr}{A gene by cell matrix storing the expression values. Should be
-raw counts.}
+\item{expr}{A gene by cell matrix storing the expression values}
 
 \item{celltypes}{A vector indicating cell types of each cell}
 
