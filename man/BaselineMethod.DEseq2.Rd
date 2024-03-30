@@ -4,12 +4,14 @@
 \alias{BaselineMethod.DEseq2}
 \title{ZINB-WaVE + DESeq2}
 \usage{
-BaselineMethod.DEseq2(expr, celltypes, nCores.used)
+BaselineMethod.DEseq2(expr, celltypes, subjects = NULL, nCores.used = NULL)
 }
 \arguments{
 \item{expr}{A gene by cell matrix storing the expression values}
 
 \item{celltypes}{A vector indicating cell types of each cell}
+
+\item{subjects}{Subject-level labels}
 
 \item{nCores.used}{The number of cores actually used}
 }

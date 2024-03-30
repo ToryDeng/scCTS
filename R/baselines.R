@@ -16,6 +16,12 @@
 #'   \item scGeneFit
 #' }
 #' For each cell type, these methods select a predefined number of markers.
+#'
+#' @details
+#' For ZINB-WaVE + DESeq2, if \code{per.subject=TRUE}, the subject labels and cell
+#' type labels will both be included in the formula. Otherwise only the subject
+#' labels will be included in the formula.
+#'
 #' NS-Forest and scGeneFit are python packages. You need to install them through
 #' \code{pip install nsforest scGeneFit} and provide the python path before you
 #' call the function.
@@ -35,11 +41,14 @@
 #'   using all but one of the CPU cores.
 #' @param python.path The path to the python.
 #'
-#' @return \itemize{ \item For DE tests, if \code{per.subject=TRUE}, a list of
+#' @return \itemize{
+#'   \item For Wilcoxon and t tests, if \code{per.subject=TRUE}, a list of
 #'   3-dim arrays. Each array is corresponding to a type of information (e.g.,
 #'   P-values). The first dim is corresponding to genes, the second dim is
 #'   corresponding to cell types, and the last dim is corresponding to subjects.
 #'   If \code{per.subject=FALSE}, the last dim has a size of 1 and a name "all".
+#'   \item For ZINB-WaVE + DESeq2, a list of 3-dim arrays. The first two dims are
+#'   the same as Wilcoxon and t tests, but the last dim always has length 1.
 #'   \item For feature/marker selection methods, if \code{per.subject=TRUE}, a
 #'   list of sublists. Each sublist contains cell-type-specific selection
 #'   results of each subject. If \code{per.subject=FALSE}, a list of
@@ -134,41 +143,46 @@ runBaselineMethod <- function(
     subjects <- colData(sce)[[subject.rep]] # convert to char list
     unique.subjects <- sort(unique(subjects))
 
-    sub.res.list <- list()
-    cli_progress_bar("Analyzing each subject", total = length(unique.subjects), type = "tasks")
-    for (sub in unique.subjects){
-      # cli_h2("Current subject: {sub}")
-      sub.Y <- Y[,subjects == sub]
-      sub.cts <- celltypes[subjects == sub]
-      sub.result = switch(
-        method,
-        "wilcox" = BaselineMethod.wilcox(sub.Y, sub.cts, numCores.used),
-        "twelch" = BaselineMethod.twelch(sub.Y, sub.cts, numCores.used),
-        "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used),
-        "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, celltype.ngenes, python.path),
-        "FEAST" = BaselineMethod.FEAST(sub.Y, sub.cts, celltype.ngenes, numCores.used),
-        "scGeneFit" = BaselineMethod.scGeneFit(sub.Y, sub.cts, celltype.ngenes, python.path),
-        stop(str_glue("No method matched for {method}"))
-      )
+    if (method != "DEseq2"){
+      sub.res.list <- list()
+      cli_progress_bar("Analyzing each subject", total = length(unique.subjects), type = "tasks")
+      for (sub in unique.subjects){
+        # cli_h2("Current subject: {sub}")
+        sub.Y <- Y[,subjects == sub]
+        sub.cts <- celltypes[subjects == sub]
+        sub.result = switch(
+          method,
+          "wilcox" = BaselineMethod.wilcox(sub.Y, sub.cts, numCores.used),
+          "twelch" = BaselineMethod.twelch(sub.Y, sub.cts, numCores.used),
+          # "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used),
+          "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, celltype.ngenes, python.path),
+          "FEAST" = BaselineMethod.FEAST(sub.Y, sub.cts, celltype.ngenes, numCores.used),
+          "scGeneFit" = BaselineMethod.scGeneFit(sub.Y, sub.cts, celltype.ngenes, python.path),
+          stop(str_glue("No method matched for {method}"))
+        )
+        if (!(method %in% baselines.fixnumber())){
+          # for DE tests, set the name of the last dim of each array as subject
+          # name, and then store
+          sub.res.list[[sub]] <- lapply(sub.result, function(arr){dimnames(arr)[3] <- sub;arr})
+        }else{
+          sub.res.list[[sub]] <- sub.result
+        }
+        cli_progress_update()
+      }
+
+      # post-analysis processing: combine results for multiple subjects
       if (!(method %in% baselines.fixnumber())){
-        # for DE tests, set the name of the last dim of each array as subject
-        # name, and then store
-        sub.res.list[[sub]] <- lapply(sub.result, function(arr){dimnames(arr)[3] <- sub;arr})
-      }else{
-        sub.res.list[[sub]] <- sub.result
-      }
-      cli_progress_update()
-    }
-    if (!(method %in% baselines.fixnumber())){
-      # combine results for multiple subjects
-      DE.res <- list()
-      for (name in names(sub.res.list[[1]])){
-        DE.res[[name]] <- abind(lapply(sub.res.list, function(lst) lst[[name]]))
-      }
-      return(DE.res)
+        DE.res <- list()
+        for (name in names(sub.res.list[[1]])){
+          DE.res[[name]] <- abind(lapply(sub.res.list, function(lst) lst[[name]]))
+        }
+        return(DE.res)
     }else{
       return(sub.res.list)
     }
+  }else{  # method == "DEseq2"
+    return(BaselineMethod.DEseq2(Y, celltypes, subjects, numCores.used))
+  }
   }else{
     cli_h1("Population-level {.emph {method}} method")
     cli_text("{.emph Note: this mode needs batch-effects correction in advance.}")
@@ -177,7 +191,7 @@ runBaselineMethod <- function(
       method,
       "wilcox" = BaselineMethod.wilcox(Y, celltypes, numCores.used),
       "twelch" = BaselineMethod.twelch(Y, celltypes, numCores.used),
-      "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, numCores.used),
+      "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, subjects=NULL, numCores.used),
       "NSforest" = BaselineMethod.NSforest(Y, celltypes, celltype.ngenes, python.path),
       "FEAST" = BaselineMethod.FEAST(Y, celltypes, celltype.ngenes, numCores.used),
       "scGeneFit" = BaselineMethod.scGeneFit(Y, celltypes, celltype.ngenes, python.path),
@@ -305,15 +319,17 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 #' ZINB-WaVE + DESeq2
 #'
 #' @inheritParams BaselineMethod.wilcox
+#' @param subjects Subject-level labels
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first
 #'   dim is genes, the second dim is cell types, and the last dim is a single
 #'   subject.
 #' @importFrom BiocParallel MulticoreParam
 #' @importFrom S4Vectors SimpleList
+#' @importFrom cli cli_alert_info
 #' @import SingleCellExperiment
 #'
-BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
+BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NULL){
   for (pkg in c("zinbwave", "DESeq2")){
     if(!requireNamespace(pkg)){
       cli_abort("This function requires the {.pkg {pkg}} package.")
@@ -324,7 +340,7 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
   ucelltypes <- unique(celltypes)
   cleaned.celltypes <- make.names(celltypes)
   cleaned.ucelltypes <- make.names(ucelltypes)
-  # create 3-dim empty arrays to store results for a single subject (i.e, the last dim is 1)
+  # create 3-dim empty arrays to store results for a single subject (i.e, the last dim has length 1)
   array.tmp <- array(NA, dim=c(length(rownames(expr)), length(ucelltypes), 1),
                      dimnames = list(rownames(expr), ucelltypes))
   DESeq2.res <- list('DESeq2.stat_info' = array.tmp,
@@ -332,19 +348,33 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
                      'DESeq2.fdr_info' = array.tmp,
                      'DESeq2.log2FC_info' = array.tmp)
 
-  # build a SingleCellExperiment object
-  core <- SingleCellExperiment(assays=list(counts=expr),
-                               colData=data.frame(celltype = factor(cleaned.celltypes)))
+  # build a SingleCellExperiment object, according to the values of `subjects`
+  if (is.null(subjects)){
+    cli_alert_info("Subject-level labels not included.")
+    colD <- data.frame(celltype = factor(cleaned.celltypes))
+    core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
+  }else{
+    cli_alert_info("Subject-level labels included.")
+    colD <- data.frame(celltype = factor(cleaned.celltypes), subject = factor(subjects))
+    core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
+  }
+
   # ZINB-WaVE, specify K = 0 to only compute observational weights
   zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
   mode(assay(zinb)) <- "integer"  # to prevent "converting counts to integer mode"
+
   # DESeq2
   for (cleaned.uct in cleaned.ucelltypes){
-    # build two groups
+    # build two cell type groups: current cell type vs all others
     is.current.celltype <- (cleaned.celltypes == cleaned.uct)
-    colData(core_zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
+    colData(zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
+    tryCatch({
+    if (is.null(subjects)){
+      dds <- DESeq2::DESeqDataSet(zinb, design = ~ group)
+    }else{
+      dds <- DESeq2::DESeqDataSet(zinb, design = ~ group + subject)
+    }
 
-    dds <- DESeq2::DESeqDataSet(zinb, design = ~ group)
     dds <- DESeq2::DESeq(
       dds, sfType="poscounts", useT=TRUE, minmu=1e-6, minRep=Inf, fitType='local',
       parallel=T, BPPARAM=BPPARAM, quiet=TRUE
@@ -352,12 +382,14 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, nCores.used){
     ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
                               alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
                               parallel=T, BPPARAM=BPPARAM)
+
     # store results
     ucelltype <- ucelltypes[cleaned.ucelltypes == cleaned.uct]
     DESeq2.res$DESeq2.stat_info[,ucelltype,1] <- ct.res[['stat']]
     DESeq2.res$DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
     DESeq2.res$DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
     DESeq2.res$DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
+    }, error=function(e){print(e);cli_alert_warning("Error occured when processing {.var {cleaned.uct}}, continue...")})
   }
   return(DESeq2.res)
 }
@@ -446,10 +478,8 @@ BaselineMethod.FEAST <- function(expr, celltypes, celltype.ngenes, nCores.used){
   FEAST.res <- list()
   for(ucelltype in unique.celltypes){
     ngenes <- celltype.ngenes[[ucelltype]]
-    tryCatch({
-      idxs <- quietly(FEAST::FEAST_fast)(
-        expr[,celltypes == ucelltype], nProc=nCores.used
-      )$result  # quietly returns a list of all messages and original return values
+    tryCatch({# quietly returns a list of all messages and original return values
+      idxs <- quietly(FEAST::FEAST_fast)(expr[,celltypes == ucelltype], nProc=nCores.used)$result
       FEAST.res[[ucelltype]] <- rownames(expr)[idxs[1:ngenes]]
     }, error=function(e){print(e);cli_alert_warning("Error occured when processing {.var {ucelltype}}, continue...")})
   }

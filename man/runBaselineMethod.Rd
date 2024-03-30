@@ -42,11 +42,14 @@ using all but one of the CPU cores.}
 \item{python.path}{The path to the python.}
 }
 \value{
-\itemize{ \item For DE tests, if \code{per.subject=TRUE}, a list of
+\itemize{
+  \item For Wilcoxon and t tests, if \code{per.subject=TRUE}, a list of
   3-dim arrays. Each array is corresponding to a type of information (e.g.,
   P-values). The first dim is corresponding to genes, the second dim is
   corresponding to cell types, and the last dim is corresponding to subjects.
   If \code{per.subject=FALSE}, the last dim has a size of 1 and a name "all".
+  \item For ZINB-WaVE + DESeq2, a list of 3-dim arrays. The first two dims are
+  the same as Wilcoxon and t tests, but the last dim always has length 1.
   \item For feature/marker selection methods, if \code{per.subject=TRUE}, a
   list of sublists. Each sublist contains cell-type-specific selection
   results of each subject. If \code{per.subject=FALSE}, a list of
@@ -67,6 +70,12 @@ selection methods implemented are:
   \item scGeneFit
 }
 For each cell type, these methods select a predefined number of markers.
+}
+\details{
+For ZINB-WaVE + DESeq2, if \code{per.subject=TRUE}, the subject labels and cell
+type labels will both be included in the formula. Otherwise only the subject
+labels will be included in the formula.
+
 NS-Forest and scGeneFit are python packages. You need to install them through
 \code{pip install nsforest scGeneFit} and provide the python path before you
 call the function.
