@@ -62,7 +62,10 @@ scCTS <- function(
   stopifnot(all(c(subject.rep, celltype.rep) %in% names(colData(sce))))
   stopifnot(all(is.numeric(c(effect_thres, maxiter, tol, min.cutoff, max.cutoff))))
 
+  start.time <- Sys.time()
   cli_h1("scCTS analysis")
+  cli_alert_info("Start at {.var {start.time}}")
+
   # get normalized count matrix
   Ynorm <- get.expression.matrix(sce, use.raw, use.norm.rep, normalize=TRUE)
   if (log.input){
@@ -97,7 +100,9 @@ scCTS <- function(
   res <- EM_estimate(data.info, effect_thres=effect_thres, maxiter=maxiter,
                      tol=tol, min.cutoff=min.cutoff, max.cutoff=max.cutoff,
                      verbose=verbose)
-  cli_text("scCTS done!")
+  end.time <- Sys.time()
+  diff.time <- as.numeric(end.time - start.time, units = "secs")
+  cli_text("scCTS completes at {.var {end.time}}  Totoal: {.var {diff.time}} seconds ({prettyunits::pretty_sec(diff.time)})")
   return(res)
 }
 

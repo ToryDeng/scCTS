@@ -137,8 +137,10 @@ runBaselineMethod <- function(
   }
 
 
+  start.time <- Sys.time()
   if (per.subject){
     cli_h1("Subject-level {.emph {method}} method")
+    cli_alert_info("Start at {.var {start.time}}")
 
     subjects <- colData(sce)[[subject.rep]] # convert to char list
     unique.subjects <- sort(unique(subjects))
@@ -176,16 +178,18 @@ runBaselineMethod <- function(
         for (name in names(sub.res.list[[1]])){
           DE.res[[name]] <- abind(lapply(sub.res.list, function(lst) lst[[name]]))
         }
-        return(DE.res)
+        final.res <- DE.res
     }else{
-      return(sub.res.list)
+      final.res <- sub.res.list
     }
   }else{  # method == "DEseq2"
-    return(BaselineMethod.DEseq2(Y, celltypes, subjects, numCores.used))
+    final.res <- BaselineMethod.DEseq2(Y, celltypes, subjects, numCores.used)
   }
   }else{
     cli_h1("Population-level {.emph {method}} method")
-    cli_text("{.emph Note: this mode needs batch-effects correction in advance.}")
+    cli_alert_warning("{.emph Note: this mode needs batch-effects correction in advance.}")
+    cli_alert_info("Start at {.var {start.time}}")
+
     subjects <- colData(sce)[[subject.rep]]
     all.result = switch(
       method,
@@ -200,8 +204,13 @@ runBaselineMethod <- function(
     if (!(method %in% baselines.fixnumber())){
       all.result <- lapply(all.result, function(arr){dimnames(arr)[3] <- "all";arr})
     }
-    return(all.result)
+    final.res <- all.result
   }
+  end.time <- Sys.time()
+  diff.time <- as.numeric(end.time - start.time, units = "secs")
+  cli_alert_info("Ends at {.var {end.time}}  Totoal: {.var {diff.time}} seconds ({prettyunits::pretty_sec(diff.time)})")
+
+  return(final.res)
 }
 
 
