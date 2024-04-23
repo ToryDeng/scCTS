@@ -157,7 +157,7 @@ runBaselineMethod <- function(
           "wilcox" = BaselineMethod.wilcox(sub.Y, sub.cts, numCores.used),
           "twelch" = BaselineMethod.twelch(sub.Y, sub.cts, numCores.used),
           # "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used),
-          "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, celltype.ngenes, python.path),
+          "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, celltype.ngenes, python.path, numCores.used),
           "FEAST" = BaselineMethod.FEAST(sub.Y, sub.cts, celltype.ngenes, numCores.used),
           "scGeneFit" = BaselineMethod.scGeneFit(sub.Y, sub.cts, celltype.ngenes, python.path),
           stop(str_glue("No method matched for {method}"))
@@ -196,7 +196,7 @@ runBaselineMethod <- function(
       "wilcox" = BaselineMethod.wilcox(Y, celltypes, numCores.used),
       "twelch" = BaselineMethod.twelch(Y, celltypes, numCores.used),
       "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, subjects=NULL, numCores.used),
-      "NSforest" = BaselineMethod.NSforest(Y, celltypes, celltype.ngenes, python.path),
+      "NSforest" = BaselineMethod.NSforest(Y, celltypes, celltype.ngenes, python.path, numCores.used),
       "FEAST" = BaselineMethod.FEAST(Y, celltypes, celltype.ngenes, numCores.used),
       "scGeneFit" = BaselineMethod.scGeneFit(Y, celltypes, celltype.ngenes, python.path),
       stop(str_glue("No method matched for {method}"))
@@ -428,7 +428,7 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
 #' @importFrom readr read_csv
 #' @importFrom purrr map2
 #'
-BaselineMethod.NSforest <- function(expr, celltypes, celltype.ngenes, python.path){
+BaselineMethod.NSforest <- function(expr, celltypes, celltype.ngenes, python.path, nCores.used=NULL){
   # import python packages
   pkg <- "reticulate"
   if(!requireNamespace(pkg)){
@@ -447,7 +447,7 @@ BaselineMethod.NSforest <- function(expr, celltypes, celltype.ngenes, python.pat
   # run NSForest for all cell types
   # the detailed results are saved in ./NSForest_outputs/NSForest_supplementary.csv
   reticulate::py_capture_output(nsforest$NSForest(
-    adata, cluster_header='celltype', n_top_genes=adata$n_vars, n_binary_genes=adata$n_vars
+    adata, cluster_header='celltype', n_top_genes=adata$n_vars, n_binary_genes=adata$n_vars, n_jobs=as.integer(nCores.used)
   ))
   supp <- read_csv("./NSForest_outputs/NSForest_supplementary.csv", show_col_types=FALSE)
 
