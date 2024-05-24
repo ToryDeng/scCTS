@@ -78,7 +78,10 @@ labels will be included in the formula.
 
 NS-Forest and scGeneFit are python packages. You need to install them through
 \code{pip install nsforest scGeneFit} and provide the python path before you
-call the function.
+call this function.
+
+Values in \code{celltype.ngenes} must be integers. You can specify it by
+\code{celltype.ngenes = list(celltype1 = 3000L)}.
 }
 \examples{
 # load the simulated data

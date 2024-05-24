@@ -4,7 +4,13 @@
 \alias{BaselineMethod.NSforest}
 \title{NS-Forest}
 \usage{
-BaselineMethod.NSforest(expr, celltypes, celltype.ngenes, python.path)
+BaselineMethod.NSforest(
+  expr,
+  celltypes,
+  celltype.ngenes,
+  python.path,
+  nCores.used = NULL
+)
 }
 \arguments{
 \item{expr}{A gene by cell matrix storing the expression values}
@@ -15,6 +21,8 @@ BaselineMethod.NSforest(expr, celltypes, celltype.ngenes, python.path)
 are number of features selected for that cell type.}
 
 \item{python.path}{The path to the python.}
+
+\item{nCores.used}{The number of cores actually used}
 }
 \value{
 A named list. Names are unique cell types. Values are selected

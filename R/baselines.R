@@ -24,7 +24,10 @@
 #'
 #' NS-Forest and scGeneFit are python packages. You need to install them through
 #' \code{pip install nsforest scGeneFit} and provide the python path before you
-#' call the function.
+#' call this function.
+#'
+#' Values in \code{celltype.ngenes} must be integers. You can specify it by
+#' \code{celltype.ngenes = list(celltype1 = 3000L)}.
 #'
 #' @param sce A \code{SingleCellExperiment} object. Should contain normalized
 #'   count matrix, subject and cell type info.
@@ -120,16 +123,17 @@ runBaselineMethod <- function(
   celltypes <- colData(sce)[[celltype.rep]] # convert to char list
   # check the list of numbers of selected markers for each cell type
   if (method %in% baselines.fixnumber()){
+    # marker numbers should be given
     if (is.null(celltype.ngenes)){
       cli_abort("{.var {method}} requires predefined numbers of markers for each cell type.")
     }
-    isin.celltypes <- names(celltype.ngenes) %in% celltypes
-    if (!all(isin.celltypes)){
-      invalid.cts <- names(celltype.ngenes)[!isin.celltypes]
-      cli_abort("Invalid number(s) of features to be selected: {.var {invalid.cts}}")
+    # cell type names should be equal
+    if (!setequal(names(celltype.ngenes), celltypes)){
+      cli_abort("Differences between: {.var {celltype.ngenes}} and {.var {celltypes}}.")
     }
+    # marker numbers should be integers
     if (!is.integer(unlist(celltype.ngenes, use.names=FALSE))){
-      cli_abort("Invalid number(s) of features to be selected: {.var {celltype.ngenes}}")
+      cli_abort("Predefined marker numbers should be all integers, got {.var {celltype.ngenes}}.")
     }
   }
   if (!(method %in% baselines.fixnumber()) & !is.null(celltype.ngenes)){
@@ -226,7 +230,7 @@ baselines.fixnumber <- function(){
 
 # returns methods that require raw counts as inputs
 baselines.counts <- function(){
-  return(c("DEseq2", "FEAST"))
+  return(c("DEseq2"))
 }
 
 
