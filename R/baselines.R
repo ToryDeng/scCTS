@@ -381,7 +381,7 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
     # ZINB-WaVE, specify `K = 0` to only compute observational weights
     zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
     mode(assay(zinb)) <- "integer"  # to prevent the message "converting counts to integer mode"
-
+    if (!dir.exists("cache")){dir.create("cache")}
     saveRDS(zinb, cache.path)
   }
 
