@@ -372,9 +372,9 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
     core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
   }
 
-  # ZINB-WaVE, specify K = 0 to only compute observational weights
+  # ZINB-WaVE, specify `K = 0` to only compute observational weights
   zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
-  mode(assay(zinb)) <- "integer"  # to prevent "converting counts to integer mode"
+  mode(assay(zinb)) <- "integer"  # to prevent the message "converting counts to integer mode"
 
   # DESeq2
   for (cleaned.uct in cleaned.ucelltypes){
@@ -384,8 +384,8 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
     tryCatch({
     if (is.null(subjects)){
       dds <- DESeq2::DESeqDataSet(zinb, design = ~ group)
-    }else{
-      dds <- DESeq2::DESeqDataSet(zinb, design = ~ group + subject)
+    }else{  # add subjects and their interactions with cell types (group)
+      dds <- DESeq2::DESeqDataSet(zinb, design = ~ group + subject + (group * subject))
     }
 
     dds <- DESeq2::DESeq(

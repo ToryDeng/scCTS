@@ -62,7 +62,7 @@ If you want to reproduce results shown in the paper, please refer to the directo
 - CPU: Intel(R) Xeon(R) Gold 6240R CPU @ 2.40GHz
 - Memory: 256GB
 - System: Ubuntu 22.04.3 LTS
-- R version: 4.3.1
+- R version: 4.4.0
 
 ## Citation
 Coming soon.

@@ -141,6 +141,45 @@ check.raw.counts <- function(expr){
 }
 
 
+#' Perform a stratified sampling on the cells from specified cell types
+#'
+#' @param sce A \code{SingleCellExperiment} object.
+#' @param sub.rep The name of subject labels.
+#' @param ct.rep The name of cell type labels.
+#' @param fraction The sampling fraction between 0 and 1.
+#' @param subset.cts Cell types that require sampling. Must be a subset of \code{unique(colData(sce)[[ct.rep]])}.
+#'
+#'
+#' @return the sampling \code{SingleCellExperiment} object.
+#' @importFrom tibble as_tibble rownames_to_column
+#' @importFrom cli cli_text
+#'
+stratified.sampling <- function(sce, sub.rep, ct.rep, fraction, subset.cts){
+  celltypes <- colData(sce)[[ct.rep]]
+  stopifnot(subset.cts %in% unique(celltypes))
+  stopifnot(between(fraction, 0, 1))
+  cli_text("Dataset size before sampling: {.var {dim(sce)}}")
+  cli_text("Cell types to sample cells: {.var {subset.cts}}")
+  cli_text("Number of cells in specified types before sampling:
+           {.var {table(celltypes)[subset.cts]}}")
+
+  subset_cells <- colData(sce) %>%
+    as_tibble(rownames = NA) %>%
+    rownames_to_column() %>%
+    dplyr::filter(get(ct.rep) %in% subset.cts) %>%
+    dplyr::group_by(get(sub.rep), get(ct.rep)) %>%
+    dplyr::sample_frac(size=fraction) %>%
+    dplyr::pull(get("rowname"))
+  cells.to.select <- !(celltypes %in% subset.cts) | colnames(sce) %in% subset_cells
+  sce <- sce[, cells.to.select]
+
+  cli_text("Dataset size after sampling: {.var {dim(sce)}}")
+  cli_text("Number of cells in specified types before sampling:
+         {.var {table(colData(sce)[[ct.rep]])[subset.cts]}}")
+  return(sce)
+}
+
+
 
 
 
