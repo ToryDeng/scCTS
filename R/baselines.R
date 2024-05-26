@@ -139,7 +139,9 @@ runBaselineMethod <- function(
   if (!(method %in% baselines.fixnumber()) & !is.null(celltype.ngenes)){
     cli_alert_warning("Invalid argument celltype.ngenes={.var {celltype.ngenes}} for {.var {method}}.")
   }
-
+  # prepare cache dir for ZINB-WaVe + DESeq2
+  cache.name <- str_glue("{get.variable.name(pbmc_lupus)}.rds")
+  cache.path <- file.path("cache", cache.name)
 
   start.time <- Sys.time()
   if (per.subject){
@@ -160,7 +162,7 @@ runBaselineMethod <- function(
           method,
           "wilcox" = BaselineMethod.wilcox(sub.Y, sub.cts, numCores.used),
           "twelch" = BaselineMethod.twelch(sub.Y, sub.cts, numCores.used),
-          # "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used),
+          # "DEseq2" = BaselineMethod.DEseq2(sub.Y, sub.cts, numCores.used, cache.path),
           "NSforest" = BaselineMethod.NSforest(sub.Y, sub.cts, celltype.ngenes, python.path, numCores.used),
           "FEAST" = BaselineMethod.FEAST(sub.Y, sub.cts, celltype.ngenes, numCores.used),
           "scGeneFit" = BaselineMethod.scGeneFit(sub.Y, sub.cts, celltype.ngenes, python.path),
@@ -187,7 +189,7 @@ runBaselineMethod <- function(
       final.res <- sub.res.list
     }
   }else{  # method == "DEseq2"
-    final.res <- BaselineMethod.DEseq2(Y, celltypes, subjects, numCores.used)
+    final.res <- BaselineMethod.DEseq2(Y, celltypes, subjects, numCores.used, cache.path)
   }
   }else{
     cli_h1("Population-level {.emph {method}} method")
@@ -199,7 +201,7 @@ runBaselineMethod <- function(
       method,
       "wilcox" = BaselineMethod.wilcox(Y, celltypes, numCores.used),
       "twelch" = BaselineMethod.twelch(Y, celltypes, numCores.used),
-      "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, subjects=NULL, numCores.used),
+      "DEseq2" = BaselineMethod.DEseq2(Y, celltypes, NULL, numCores.used, cache.path),
       "NSforest" = BaselineMethod.NSforest(Y, celltypes, celltype.ngenes, python.path, numCores.used),
       "FEAST" = BaselineMethod.FEAST(Y, celltypes, celltype.ngenes, numCores.used),
       "scGeneFit" = BaselineMethod.scGeneFit(Y, celltypes, celltype.ngenes, python.path),
@@ -333,6 +335,7 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 #'
 #' @inheritParams BaselineMethod.wilcox
 #' @param subjects Subject-level labels
+#' @param cache.path Path to the cached RDS file
 #'
 #' @return A list of 3-dim arrays. Each array corresponds to a stat. The first
 #'   dim is genes, the second dim is cell types, and the last dim is a single
@@ -342,7 +345,7 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 #' @importFrom cli cli_alert_info
 #' @import SingleCellExperiment
 #'
-BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NULL){
+BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NULL, cache.path=NULL){
   for (pkg in c("zinbwave", "DESeq2")){
     if(!requireNamespace(pkg)){
       cli_abort("This function requires the {.pkg {pkg}} package.")
@@ -361,20 +364,26 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
                      'DESeq2.fdr_info' = array.tmp,
                      'DESeq2.log2FC_info' = array.tmp)
 
-  # build a SingleCellExperiment object, according to the values of `subjects`
-  if (is.null(subjects)){
-    cli_alert_info("Subject-level labels not included.")
-    colD <- data.frame(celltype = factor(cleaned.celltypes))
-    core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
-  }else{
-    cli_alert_info("Subject-level labels included.")
-    colD <- data.frame(celltype = factor(cleaned.celltypes), subject = factor(subjects))
-    core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
-  }
+  if (file.exists(cache.path)){  # directly load the cache
+    zinb <- readRDS(cache.path)
+  }else{  # run zinbwave and save cache
+    # build a SingleCellExperiment object, according to the values of `subjects`
+    if (is.null(subjects)){
+      cli_alert_info("Subject-level labels not included.")
+      colD <- data.frame(celltype = factor(cleaned.celltypes))
+      core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
+    }else{
+      cli_alert_info("Subject-level labels included.")
+      colD <- data.frame(celltype = factor(cleaned.celltypes), subject = factor(subjects))
+      core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
+    }
 
-  # ZINB-WaVE, specify `K = 0` to only compute observational weights
-  zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
-  mode(assay(zinb)) <- "integer"  # to prevent the message "converting counts to integer mode"
+    # ZINB-WaVE, specify `K = 0` to only compute observational weights
+    zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
+    mode(assay(zinb)) <- "integer"  # to prevent the message "converting counts to integer mode"
+
+    saveRDS(zinb, cache.path)
+  }
 
   # DESeq2
   for (cleaned.uct in cleaned.ucelltypes){

@@ -180,6 +180,8 @@ stratified.sampling <- function(sce, sub.rep, ct.rep, fraction, subset.cts){
 }
 
 
-
+get.variable.name <- function(x){
+  return(deparse1(substitute(x)))
+}
 
 
