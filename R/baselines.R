@@ -59,6 +59,7 @@
 #' @import SingleCellExperiment
 #' @importFrom abind abind
 #' @importFrom stringr str_glue
+#' @importFrom S4Vectors metadata
 #' @export
 #'
 #' @examples
@@ -139,9 +140,10 @@ runBaselineMethod <- function(
   if (!(method %in% baselines.fixnumber()) & !is.null(celltype.ngenes)){
     cli_alert_warning("Invalid argument celltype.ngenes={.var {celltype.ngenes}} for {.var {method}}.")
   }
-  # prepare cache dir for ZINB-WaVe + DESeq2
-  cache.name <- str_glue("{get.variable.name(pbmc_lupus)}.rds")
-  cache.path <- file.path("cache", cache.name)
+  # prepare cache dir, currently only for ZINB-WaVe + DESeq2
+  name.exists <- exists("dataset_name", where=metadata(sce))
+  dataset.name <- ifelse(name.exists, metadata(sce)$dataset_name, deparse1(substitute(sce)))  # get variable's name
+  cache.path <- file.path("cache", dataset.name)
 
   start.time <- Sys.time()
   if (per.subject){
@@ -341,9 +343,9 @@ BaselineMethod.twelch <- function(expr, celltypes, nCores.used){
 #'   dim is genes, the second dim is cell types, and the last dim is a single
 #'   subject.
 #' @importFrom BiocParallel MulticoreParam
+#' @importFrom stringr str_glue
 #' @importFrom S4Vectors SimpleList
-#' @importFrom cli cli_alert_info
-#' @import SingleCellExperiment
+#' @import SingleCellExperiment cli
 #'
 BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NULL, cache.path=NULL){
   for (pkg in c("zinbwave", "DESeq2")){
@@ -364,8 +366,10 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
                      'DESeq2.fdr_info' = array.tmp,
                      'DESeq2.log2FC_info' = array.tmp)
 
-  if (file.exists(cache.path)){  # directly load the cache
-    zinb <- readRDS(cache.path)
+  zinbwave.path <- file.path(cache.path, "zinbwave.rds")
+  if (file.exists(zinbwave.path)){  # directly load the cache
+    zinb <- readRDS(zinbwave.path)
+    cli_alert_success("Cached ZINB-WaVe results loaded from {.file {zinbwave.path}}.")
   }else{  # run zinbwave and save cache
     # build a SingleCellExperiment object, according to the values of `subjects`
     if (is.null(subjects)){
@@ -374,36 +378,47 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
       core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
     }else{
       cli_alert_info("Subject-level labels included.")
-      colD <- data.frame(celltype = factor(cleaned.celltypes), subject = factor(subjects))
+      colD <- data.frame(celltype = factor(cleaned.celltypes), subject = factor(make.names(subjects)))
       core <- SingleCellExperiment(assays=list(counts=expr), colData=colD)
     }
 
     # ZINB-WaVE, specify `K = 0` to only compute observational weights
     zinb <- zinbwave::zinbwave(core, K=0, observationalWeights=TRUE, BPPARAM=BPPARAM, epsilon=1e12)
     mode(assay(zinb)) <- "integer"  # to prevent the message "converting counts to integer mode"
-    if (!dir.exists("cache")){dir.create("cache")}
-    saveRDS(zinb, cache.path)
+    if (!dir.exists(cache.path)){dir.create(cache.path, recursive=TRUE)}
+    saveRDS(zinb, zinbwave.path)
+    cli_alert_success("ZINB-WaVe results cached at {.file {zinbwave.path}}.")
   }
 
   # DESeq2
+  cli_progress_bar("Running DESeq2", total = length(cleaned.ucelltypes))
   for (cleaned.uct in cleaned.ucelltypes){
-    # build two cell type groups: current cell type vs all others
-    is.current.celltype <- (cleaned.celltypes == cleaned.uct)
-    colData(zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
-    tryCatch({
-    if (is.null(subjects)){
-      dds <- DESeq2::DESeqDataSet(zinb, design = ~ group)
-    }else{  # add subjects and their interactions with cell types (group)
-      dds <- DESeq2::DESeqDataSet(zinb, design = ~ group + subject + (group * subject))
-    }
+    # prepare cache path
+    ct.path <- file.path(cache.path, str_glue("{cleaned.uct}.rds"))
+    # check whther the cell type cache exists
+    if (file.exists(ct.path)){
+      ct.res <- readRDS(ct.path)
+    }else{
+      # if the cache doesn't exist, build two cell type groups: current cell type vs all others
+      is.current.celltype <- (cleaned.celltypes == cleaned.uct)
+      colData(zinb)['group'] <- as.factor(ifelse(is.current.celltype, cleaned.uct, "others"))
+      tryCatch({
+        if (is.null(subjects)){
+          dds <- DESeq2::DESeqDataSet(zinb, design = ~ group)
+        }else{  # add subjects and their interactions with cell types (group)
+          dds <- DESeq2::DESeqDataSet(zinb, design = ~ group + subject + (group * subject))
+        }
 
-    dds <- DESeq2::DESeq(
-      dds, sfType="poscounts", useT=TRUE, minmu=1e-6, minRep=Inf, fitType='local',
-      parallel=T, BPPARAM=BPPARAM, quiet=TRUE
-    )
-    ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
-                              alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
-                              parallel=T, BPPARAM=BPPARAM)
+        dds <- DESeq2::DESeq(
+          dds, sfType="poscounts", useT=TRUE, minmu=1e-6, minRep=Inf, fitType='local',
+          parallel=T, BPPARAM=BPPARAM, quiet=TRUE
+        )
+        ct.res <- DESeq2::results(object = dds, contrast = c("group", cleaned.uct, "others"),
+                                  alpha = 0.05, pAdjustMethod ='fdr', altHypothesis="greater",
+                                  parallel=T, BPPARAM=BPPARAM)
+      }, error=function(e){print(e);cli_alert_warning("Error occured when processing {.var {cleaned.uct}}, continue...")})
+      saveRDS(ct.res, ct.path)
+    }
 
     # store results
     ucelltype <- ucelltypes[cleaned.ucelltypes == cleaned.uct]
@@ -411,8 +426,10 @@ BaselineMethod.DEseq2 <- function(expr, celltypes, subjects=NULL, nCores.used=NU
     DESeq2.res$DESeq2.pval_info[,ucelltype,1] <- ct.res[['pvalue']]
     DESeq2.res$DESeq2.fdr_info[,ucelltype,1] <- ct.res[['padj']]
     DESeq2.res$DESeq2.log2FC_info[,ucelltype,1] <- ct.res[['log2FoldChange']]
-    }, error=function(e){print(e);cli_alert_warning("Error occured when processing {.var {cleaned.uct}}, continue...")})
+    # update progress bar
+    cli_progress_update(status = str_glue("last finished: {cleaned.uct}"))
   }
+  cli_progress_done()
   return(DESeq2.res)
 }
 

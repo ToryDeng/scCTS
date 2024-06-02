@@ -173,15 +173,10 @@ stratified.sampling <- function(sce, sub.rep, ct.rep, fraction, subset.cts){
   cells.to.select <- !(celltypes %in% subset.cts) | colnames(sce) %in% subset_cells
   sce <- sce[, cells.to.select]
 
-  cli_text("Dataset size after sampling: {.var {dim(sce)}}")
-  cli_text("Number of cells in specified types before sampling:
+  cli_text("Number of cells in specified types after sampling:
          {.var {table(colData(sce)[[ct.rep]])[subset.cts]}}")
+  cli_text("Dataset size after sampling: {.var {dim(sce)}}")
   return(sce)
-}
-
-
-get.variable.name <- function(x){
-  return(deparse1(substitute(x)))
 }
 
 
