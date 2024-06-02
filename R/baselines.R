@@ -192,6 +192,7 @@ runBaselineMethod <- function(
     }
   }else{  # method == "DEseq2"
     final.res <- BaselineMethod.DEseq2(Y, celltypes, subjects, numCores.used, cache.path)
+    final.res <- lapply(final.res, function(arr){dimnames(arr)[3] <- "per.subject";arr})
   }
   }else{
     cli_h1("Population-level {.emph {method}} method")
