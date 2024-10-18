@@ -1,4 +1,4 @@
-# scCTS: identifying the cell type specific marker genes from population-level single-cell RNA-seq
+# scCTS: identifying the cell type-specific marker genes from population-level single-cell RNA-seq
 
 `scCTS` is an R package for the statistical modeling of the 
 gene differential expression (DE) in scRNA-seq data. It identifies cell-type specific genes (markers) that consistently appear in historical population-level scRNA-seq (scRNA-seq) data. `scCTS` is built on top of the R package [`SingleCellExperiment`](https://bioconductor.org/packages/devel/bioc/html/SingleCellExperiment.html) and supports parallel computation.
@@ -65,4 +65,20 @@ If you want to reproduce results shown in the paper, please refer to the directo
 - R version: 4.4.0
 
 ## Citation
-Coming soon.
+```bibtex
+@article{chenScCTSIdentifyingCell2024,
+  title = {{{scCTS}}: Identifying the Cell Type-Specific Marker Genes from Population-Level Single-Cell {{RNA-seq}}},
+  shorttitle = {{{scCTS}}},
+  author = {Chen, Luxiao and Guo, Zhenxing and Deng, Tao and Wu, Hao},
+  year = {2024},
+  month = oct,
+  journal = {Genome Biology},
+  volume = {25},
+  number = {1},
+  pages = {269},
+  issn = {1474-760X},
+  doi = {10.1186/s13059-024-03410-8},
+  langid = {english}
+}
+```
+
